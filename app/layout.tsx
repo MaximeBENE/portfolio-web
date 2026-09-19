@@ -9,6 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://portfolio-web-gules-nu.vercel.app/"),
   title: {
     default: "Maxime BENE — Développeur en reconversion cybersécurité",
     template: "%s | Maxime BENE",
