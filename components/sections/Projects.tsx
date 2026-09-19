@@ -6,6 +6,7 @@ import { ArrowUpRight, Shield, Terminal, Lock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GithubIcon } from "@/components/icons";
+import { ScrollReveal } from "@/components/scroll-reveal";
 
 type Project = {
   title: string;
@@ -80,13 +81,7 @@ export function Projects() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project, i) => (
-            <motion.div
-              key={project.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-            >
+            <ScrollReveal key={project.title} delay={i * 0.1}>
               <Card className="group flex h-full flex-col border-border/60 transition-all hover:border-primary/40 hover:shadow-lg">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -144,7 +139,7 @@ export function Projects() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

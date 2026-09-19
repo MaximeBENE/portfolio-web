@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { label: "Projets", href: "/#projects" },
@@ -35,11 +36,8 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-          <Button
-            size="sm"
-            nativeButton={false}
-            render={<a href="/cv.pdf" download />}
-          >
+          <ThemeToggle />
+          <Button size="sm" nativeButton={false} render={<a href="/cv.pdf" download />}>
             Télécharger mon CV
           </Button>
         </nav>
@@ -67,6 +65,10 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-sm text-muted-foreground">Thème</span>
+              <ThemeToggle />
+            </div>
             <Button
               size="sm"
               className="mt-2"
