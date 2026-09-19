@@ -40,10 +40,7 @@ export const metadata: Metadata = {
     title: "Maxime BENE — Portfolio Cybersécurité",
     description: "Développeur web en reconversion vers la cybersécurité (SOC N1).",
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
