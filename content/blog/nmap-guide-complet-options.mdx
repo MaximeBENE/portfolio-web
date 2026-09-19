@@ -1,0 +1,300 @@
+---
+title: "Nmap : le guide complet des options essentielles"
+description: "Toutes les commandes Nmap que j'utilise en lab : découverte d'hôtes, scans SYN, détection de versions, scripts NSE. Avec exemples et interprétation des résultats."
+date: "2025-09-21"
+tags: ["Nmap", "Reconnaissance", "Réseau", "Kali Linux"]
+published: true
+---
+
+## Pourquoi Nmap ?
+
+**Nmap** (Network Mapper) est l'outil de référence pour la reconnaissance réseau. Il permet de :
+
+- **Découvrir** les machines actives sur un réseau
+- **Identifier** les ports ouverts et les services associés
+- **Détecter** les versions logicielles (utile pour repérer des CVE)
+- **Cartographier** un réseau avant une intervention
+
+C'est l'un des premiers outils qu'un analyste SOC doit maîtriser. Pas parce qu'il faut "attaquer", mais parce que **comprendre un scan permet de le détecter**.
+
+## Structure d'une commande Nmap
+
+```bash
+sudo nmap [options] <cible>
+```
+
+**Trois règles à retenir :**
+
+1. **Toujours `sudo`** pour les scans avancés (SYN, OS, scripts)
+2. **La cible** peut être une IP, un hostname ou une plage CIDR
+3. **Les options se combinent** — plus tu en mets, plus le scan est long
+
+## Découverte d'hôtes
+
+### Ping sweep (`-sn`)
+
+Pour trouver les machines actives sur un réseau **sans scanner les ports** :
+
+```bash
+sudo nmap -sn 192.168.149.0/24
+```
+
+**Ce que ça fait :** envoie des requêtes ICMP (ping) et ARP à toutes les IP de la plage.
+
+**Résultat typique :**
+
+```
+Nmap scan report for 192.168.149.129
+Host is up (0.00042s latency).
+MAC Address: 08:00:27:XX:XX:XX (Oracle VirtualBox)
+
+Nmap scan report for 192.168.149.130
+Host is up (0.00031s latency).
+```
+
+**Quand l'utiliser :** première étape de toute reconnaissance, pour savoir qui est là avant de creuser.
+
+## Scans de ports
+
+### Scan SYN (`-sS`) — le "stealth scan"
+
+Le scan le plus utilisé. Rapide, discret, et il ne termine **jamais** la connexion TCP.
+
+```bash
+sudo nmap -sS 192.168.149.130
+```
+
+**Comment ça marche :**
+
+1. Nmap envoie un paquet **SYN**
+2. Si le port est ouvert → la cible répond **SYN-ACK**
+3. Nmap envoie un **RST** pour couper court (pas de ACK final)
+4. Si le port est fermé → la cible répond **RST**
+
+**Avantage :** la connexion n'est jamais établie, donc **moins de traces dans les logs applicatifs**.
+
+### Scan TCP complet (`-sT`)
+
+Utilise la pile TCP du système d'exploitation. **Plus visible** (connexion complète établie) mais fonctionne sans privilèges root.
+
+```bash
+nmap -sT 192.168.149.130
+```
+
+**Quand l'utiliser :** si tu n'as pas `sudo`, ou si tu veux être certain du résultat (le handshake est complet).
+
+## Détection de services
+
+### Détection de version (`-sV`)
+
+Identifie la **version exacte** du logiciel qui tourne sur chaque port ouvert.
+
+```bash
+sudo nmap -sV 192.168.149.130
+```
+
+**Résultat typique :**
+
+```
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.4
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+```
+
+**Pourquoi c'est crucial :** tu peux croiser avec des bases de CVE pour savoir si la version est vulnérable. Exemple : `OpenSSH 8.9p1` → chercher sur [cve.org](https://www.cve.org).
+
+### Détection d'OS (`-O`)
+
+Devine le système d'exploitation cible via l'empreinte TCP/IP.
+
+```bash
+sudo nmap -O 192.168.149.130
+```
+
+**Résultat typique :**
+
+```
+Running: Linux 5.X
+OS CPE: cpe:/o:linux:linux_kernel:5
+OS details: Linux 5.0 - 5.14
+```
+
+**Fiabilité :** bonne mais pas parfaite. À croiser avec d'autres indices.
+
+## Le scan agressif (`-A`)
+
+Combine **détection de version + OS + traceroute + scripts par défaut** :
+
+```bash
+sudo nmap -A 192.168.149.130
+```
+
+**Ce que ça active :**
+- `-sV` : versions des services
+- `-O` : détection d'OS
+- `--traceroute` : chemin réseau
+- Scripts NSE de la catégorie `default`
+
+**Avantage :** un seul scan pour tout avoir.
+
+**Inconvénient :** bruyant et long. À éviter en environnement de production réel.
+
+## Ciblage de ports
+
+### Scan d'un port précis
+
+```bash
+sudo nmap -p 80 192.168.149.130
+```
+
+### Scan d'une plage
+
+```bash
+sudo nmap -p 1-1000 192.168.149.130
+```
+
+### Scan de TOUS les ports
+
+```bash
+sudo nmap -p- 192.168.149.130
+```
+
+**⚠️ Attention :** scanne les 65535 ports TCP. Peut prendre **plusieurs minutes** selon la cible.
+
+### Top ports
+
+```bash
+sudo nmap --top-ports=100 192.168.149.130
+```
+
+**Bon compromis** vitesse / efficacité. Nmap scanne les N ports les plus fréquemment ouverts.
+
+## Options complémentaires utiles
+
+### Ne pas résoudre les DNS (`-n`)
+
+```bash
+sudo nmap -n -sS 192.168.149.130
+```
+
+**Gain de vitesse** considérable sur les grandes plages.
+
+### Verbeux (`-v`)
+
+```bash
+sudo nmap -v -sS 192.168.149.130
+```
+
+Affiche la progression en temps réel.
+
+### Sauvegarder les résultats (`-oA`)
+
+```bash
+sudo nmap -A -oA scan_complet 192.168.149.130
+```
+
+Génère **3 fichiers** :
+- `scan_complet.nmap` → lisible par humain
+- `scan_complet.xml` → pour outils automatiques
+- `scan_complet.gnmap` → pour grep
+
+## Interpréter les résultats
+
+| État | Signification | Réponse Wireshark |
+|:---|:---|:---|
+| `open` | Un service écoute | **SYN-ACK** |
+| `closed` | Aucun service, mais la machine répond | **RST** |
+| `filtered` | Pare-feu bloque, aucune réponse | *(rien)* |
+| `unfiltered` | Accessible, état inconnu | *(variable)* |
+
+**En SOC, ces trois états ont un sens différent :**
+
+- Beaucoup de `open` sur une IP **externe** → suspect, à qualifier
+- Beaucoup de `filtered` → un pare-feu bien configuré
+- Un scan interne depuis une IP inhabituelle → **alerte**
+
+## Scripts NSE (Nmap Scripting Engine)
+
+Nmap peut exécuter des **scripts Lua** pour aller plus loin. Le plus utile en reconnaissance :
+
+```bash
+sudo nmap --script vuln 192.168.149.130
+```
+
+**Catégories principales :**
+
+| Catégorie | Usage |
+|:---|:---|
+| `default` | Scripts sûrs, exécutés par `-A` |
+| `safe` | Aucun impact sur la cible |
+| `vuln` | Détecte les vulnérabilités connues |
+| `auth` | Teste les mécanismes d'authentification |
+| `discovery` | Découverte de services supplémentaires |
+
+**Exemple — détecter une faille SMB :**
+
+```bash
+sudo nmap --script smb-vuln-ms17-010 192.168.149.130
+```
+
+## Détecter un scan Nmap (côté SOC)
+
+Maintenant que tu sais faire un scan, tu dois savoir **le détecter**. Indices dans les logs :
+
+- **Beaucoup de SYN** depuis une même IP source vers des ports différents
+- **Paquets RST** en rafale (ports fermés)
+- **Pas de ACK final** (scan SYN = handshake incomplet)
+- **Durée très courte** pour toucher beaucoup de ports
+
+**Dans Wireshark :**
+
+```
+tcp.flags.syn == 1 && tcp.flags.ack == 0
+```
+
+→ Affiche tous les SYN initiaux, c'est-à-dire les tentatives de connexion. Un pic depuis une IP = scan probable.
+
+**Avec mon outil [Network Packet Analyzer](/projects/network-analyzer) :** il détecte automatiquement les scans de ports en comptant les ports distincts par IP source.
+
+## Bonnes pratiques
+
+- ✅ **Toujours** scanner des IPs sur lesquelles tu as une autorisation écrite
+- ✅ Utiliser un **lab isolé** (Host-Only) pour l'apprentissage
+- ✅ Vérifier la **connectivité** (`ping`) avant de scanner
+- ✅ **Sauvegarder** les résultats (`-oA`) pour analyse ultérieure
+- ✅ Croiser `-sV` avec les **CVE** pour évaluer les risques
+- ❌ Ne **jamais** scanner un réseau public ou une infrastructure tierce
+
+## Récapitulatif — les commandes à retenir
+
+```bash
+# Découverte
+sudo nmap -sn 192.168.149.0/24
+
+# Scan SYN rapide
+sudo nmap -sS 192.168.149.130
+
+# Détection de versions
+sudo nmap -sV 192.168.149.130
+
+# Scan agressif complet
+sudo nmap -A 192.168.149.130
+
+# Top 100 ports
+sudo nmap --top-ports=100 192.168.149.130
+
+# Tous les ports
+sudo nmap -p- 192.168.149.130
+
+# Détection de vulnérabilités SMB
+sudo nmap --script smb-vuln-ms17-010 192.168.149.130
+
+# Sauvegarder
+sudo nmap -A -oA scan_complet 192.168.149.130
+```
+
+## Pour aller plus loin
+
+- Analyser un scan Nmap **au niveau paquet** avec Wireshark : [prochain article à venir]
+- Le lab réseau isolé : [Mettre en place un lab réseau isolé avec VirtualBox](/blog/lab-reseau-virtualbox-nmap-wireshark)
+- Détecter automatiquement les scans : [Network Packet Analyzer](/projects/network-analyzer)
