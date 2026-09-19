@@ -33,14 +33,15 @@ const projects: Project[] = [
     status: "live",
   },
   {
-    title: "Lab Cybersécurité",
+    title: "Lab Réseau Virtualisé",
     description:
-      "Environnement virtualisé (Kali + Ubuntu) pour simuler des attaques et valider les détections : scans Nmap, brute-force SSH, captures Wireshark.",
-    tags: ["VirtualBox", "Kali", "Ubuntu", "Wireshark"],
+      "Laboratoire isolé Kali + Ubuntu pour l'analyse réseau : scans Nmap, captures Wireshark, analyse de paquets TCP et démarche SOC.",
+    tags: ["VirtualBox", "Kali", "Nmap", "Wireshark"],
     icon: <Terminal className="h-5 w-5" />,
-    iconBg: "bg-purple-500/10",
-    iconColor: "text-purple-500",
-    status: "in-progress",
+    iconBg: "bg-blue-500/10",
+    iconColor: "text-blue-500",
+    detail: "/projects/lab-reseau",
+    status: "live",
   },
   {
     title: "Détection ARP Spoofing",
