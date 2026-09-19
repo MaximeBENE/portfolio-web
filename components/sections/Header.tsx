@@ -24,6 +24,7 @@ export function Header() {
           <span>Maxime BENE</span>
         </Link>
 
+        {/* Nav desktop */}
         <nav className="hidden items-center gap-6 md:flex">
           {navItems.map((item) => (
             <Link
@@ -34,9 +35,13 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-            <Button size="sm" render={<a href="/cv.pdf" download />}>
-                Télécharger mon CV
-            </Button>
+          <Button
+            size="sm"
+            nativeButton={false}
+            render={<a href="/cv.pdf" download />}
+          >
+            Télécharger mon CV
+          </Button>
         </nav>
 
         <button
@@ -48,6 +53,7 @@ export function Header() {
         </button>
       </div>
 
+      {/* Nav mobile */}
       {isOpen && (
         <nav className="border-t border-border/40 bg-background md:hidden">
           <div className="container mx-auto flex flex-col gap-2 px-4 py-4">
@@ -61,10 +67,13 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <Button size="sm" render={<Link href="/cv" />}>
-              <a href="/cv.pdf" download>
-                Télécharger mon CV
-              </a>
+            <Button
+              size="sm"
+              className="mt-2"
+              nativeButton={false}
+              render={<a href="/cv.pdf" download />}
+            >
+              Télécharger mon CV
             </Button>
           </div>
         </nav>
