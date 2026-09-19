@@ -1,0 +1,224 @@
+---
+title: "Analyser un scan Nmap avec Wireshark — au niveau paquet"
+description: "Comment voir un scan Nmap dans Wireshark, interpréter les flags TCP, et comprendre ce qui se passe réellement sur le réseau pendant une reconnaissance."
+date: "2025-09-22"
+tags: ["Wireshark", "Nmap", "Analyse réseau", "TCP", "SOC"]
+published: true
+---
+
+## Pourquoi analyser un scan au niveau paquet ?
+
+Lancer Nmap, c'est facile. **Comprendre ce qu'il fait vraiment**, c'est ce qui distingue un utilisateur d'un analyste.
+
+En SOC, tu ne verras jamais "un scan Nmap" dans un log. Tu verras des **paquets SYN**, des **RST**, des **réponses incohérentes** — et c'est à toi de reconstituer l'histoire.
+
+Cet article montre, capture Wireshark à l'appui, ce qui se passe réellement sur le réseau pendant un scan.
+
+## Préparation
+
+### Le lab
+
+- **Kali** (`192.168.149.129`) → poste d'attaque et d'analyse
+- **Ubuntu** (`192.168.149.130`) → cible avec Apache sur le port 80
+
+### Le filtre Wireshark de base
+
+Avant même de commencer, applique ce filtre pour ne voir que le trafic entre les deux machines :
+
+```
+ip.addr == 192.168.149.130 && ip.addr == 192.168.149.129
+```
+
+**Sans ce filtre**, Wireshark capture aussi le bruit de fond (ARP, mDNS, etc.) et c'est illisible.
+
+## Étape 1 — Lancer la capture AVANT le scan
+
+**Règle d'or :** on lance **toujours** la capture avant de générer le trafic. Sinon on rate le début de l'échange.
+
+1. Dans Wireshark, sélectionne l'interface `eth0`
+2. Clique sur la **nageoire bleue** (Start)
+3. Applique le filtre `ip.addr == 192.168.149.130`
+
+## Étape 2 — Lancer le scan depuis Kali
+
+Dans un terminal Kali :
+
+```bash
+sudo nmap -sS 192.168.149.130
+```
+
+**Ce que fait ce scan :**
+
+1. Envoie un paquet **SYN** sur chaque port scanné
+2. Reçoit **SYN-ACK** (port ouvert) ou **RST** (port fermé)
+3. Envoie un **RST** pour fermer (ne termine jamais la connexion)
+
+## Étape 3 — Lire la capture
+
+### Ce qu'on voit dans Wireshark
+
+| # | Source | Destination | Protocole | Info |
+|:---:|:---|:---|:---|:---|
+| 1 | 192.168.149.129 | 192.168.149.130 | TCP | 54321 → 22 [SYN] |
+| 2 | 192.168.149.130 | 192.168.149.129 | TCP | 22 → 54321 [SYN, ACK] |
+| 3 | 192.168.149.129 | 192.168.149.130 | TCP | 54321 → 22 [RST] |
+| 4 | 192.168.149.129 | 192.168.149.130 | TCP | 54322 → 23 [SYN] |
+| 5 | 192.168.149.130 | 192.168.149.129 | TCP | 23 → 54322 [RST, ACK] |
+| 6 | 192.168.149.129 | 192.168.149.130 | TCP | 54323 → 25 [SYN] |
+| ... | ... | ... | ... | ... |
+
+**Deux comportements à repérer :**
+
+- **Port ouvert (22/SSH)** : SYN → SYN-ACK → **RST**
+- **Port fermé (23, 25…)** : SYN → **RST-ACK**
+
+### Lecture des flags TCP
+
+| Flag | Signification |
+|:---|:---|
+| **SYN** | Demande de connexion |
+| **SYN-ACK** | La cible accepte |
+| **ACK** | Confirmation |
+| **RST** | Connexion refusée / coupée |
+| **FIN** | Fin normale de connexion |
+
+**Le pattern qui trahit un scan SYN :**
+
+```
+SYN → SYN-ACK → RST
+```
+
+Le RST **immédiat** après SYN-ACK signifie que la connexion n'a jamais été utilisée. C'est une signature de scan.
+
+### Différence avec une connexion normale
+
+Une connexion HTTP légitime fait :
+
+```
+SYN → SYN-ACK → ACK → GET / HTTP/1.1 → 200 OK → FIN
+```
+
+Un scan SYN fait :
+
+```
+SYN → SYN-ACK → RST    (port ouvert)
+SYN → RST-ACK          (port fermé)
+```
+
+**Il manque le ACK final** — c'est précisément ce qui rend le scan "stealth".
+
+## Les filtres Wireshark indispensables
+
+### Voir uniquement les SYN
+
+```
+tcp.flags.syn == 1 && tcp.flags.ack == 0
+```
+
+Affiche tous les **SYN initiaux** (tentatives de connexion). Un pic = scan probable.
+
+### Voir uniquement les RST
+
+```
+tcp.flags.rst == 1
+```
+
+Affiche les **connexions refusées**. Beaucoup de RST depuis une IP source = scan.
+
+### Voir un port spécifique
+
+```
+tcp.port == 22
+```
+
+### Combiner
+
+```
+ip.addr == 192.168.149.130 && tcp.port == 80 && tcp.flags.syn == 1
+```
+
+→ Tous les SYN vers le port 80 de l'Ubuntu.
+
+## Comprendre le three-way handshake
+
+Le **three-way handshake** est la base de toute connexion TCP :
+
+| # | Source → Destination | Flags |
+|:---:|:---|:---|
+| 1 | Client → Serveur | **SYN** |
+| 2 | Serveur → Client | **SYN, ACK** |
+| 3 | Client → Serveur | **ACK** |
+
+Après ces 3 paquets, la connexion est **établie**. Les données peuvent circuler.
+
+### Puis l'échange de données
+
+| # | Source → Destination | Contenu |
+|:---:|:---|:---|
+| 4 | Client → Serveur | `GET / HTTP/1.1` |
+| 5 | Serveur → Client | `HTTP/1.1 200 OK` |
+
+### Et la fermeture
+
+| # | Source → Destination | Flags |
+|:---:|:---|:---|
+| 6 | Client → Serveur | **FIN, ACK** |
+| 7 | Serveur → Client | **FIN, ACK** |
+| 8 | Client → Serveur | **ACK** |
+
+**Total : 8 paquets** pour un simple GET HTTP.
+
+**Un scan SYN :** 3 paquets par port (SYN, SYN-ACK, RST). Sur 1000 ports scannés → **3000 paquets en quelques secondes**.
+
+## Follow TCP Stream
+
+Pour suivre une conversation complète :
+
+1. Clic droit sur un paquet
+2. **Follow** → **TCP Stream**
+
+Tu vois la conversation brute, en clair (si non chiffrée). Très utile pour analyser une session HTTP, un échange SMTP, etc.
+
+## Détecter un scan — les signaux faibles
+
+En SOC, un scan Nmap se détecte par **accumulation d'indices** :
+
+| Signal | Ce que ça veut dire |
+|:---|:---|
+| Beaucoup de SYN depuis une IP vers des ports différents | Scan de ports |
+| RST en rafale | Ports fermés scannés |
+| Pas de ACK final après SYN-ACK | Scan SYN (stealth) |
+| Durée très courte pour beaucoup de ports | Automatisé, pas humain |
+| SYN vers des ports inhabituels (8888, 9000, 31337) | Scan ciblé |
+
+**Avec mon outil [Network Packet Analyzer](/projects/network-analyzer) :**
+
+```
+🚨 CRITIQUE — SCAN DE PORTS (interne) depuis 192.168.149.129 — 1000 ports distincts
+```
+
+→ Détection automatique basée sur le même principe.
+
+## Bonnes pratiques
+
+- ✅ **Lancer la capture avant** de générer le trafic
+- ✅ **Filtrer** sur les IPs concernées (`ip.addr ==`)
+- ✅ **Sauvegarder** les captures (`.pcap`) pour analyse ultérieure
+- ✅ **Nommer** tes captures (`scan_syn_ubuntu_20250922.pcap`)
+- ✅ Utiliser **curl** plutôt qu'un navigateur pour les tests HTTP simples
+- ❌ Ne **pas** analyser du trafic sans autorisation
+
+## Ce que j'en retiens
+
+1. Un **scan SYN** laisse une signature claire : SYN → SYN-ACK → RST
+2. Le **handshake TCP** est la clé pour distinguer trafic légitime et scan
+3. Les **filtres Wireshark** sont indispensables pour ne pas se noyer
+4. En SOC, la détection repose sur la **corrélation** : source + destination + volume + durée
+
+**Comprendre ce qui se passe au niveau paquet, c'est comprendre ce que tu verras dans les logs.**
+
+## Pour aller plus loin
+
+- [Mettre en place un lab réseau isolé avec VirtualBox](/blog/lab-reseau-virtualbox-nmap-wireshark)
+- [Nmap : le guide complet des options essentielles](/blog/nmap-guide-complet-options)
+- [Network Packet Analyzer — mini-IDS Python](/projects/network-analyzer)

