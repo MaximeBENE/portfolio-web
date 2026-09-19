@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Briefcase, GraduationCap, Shield, Code2 } from "lucide-react";
+import { Briefcase, GraduationCap, Shield } from "lucide-react";
 
 type TimelineItem = {
   period: string;
