@@ -1,0 +1,19 @@
+cat > .gitattributes << 'EOF'
+# Normalisation automatique des fins de ligne
+* text=auto eol=lf
+
+# Fichiers Windows qui DOIVENT rester en CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Fichiers binaires (pas de conversion)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.pcap binary
+*.pcapng binary
+EOF
