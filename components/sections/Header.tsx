@@ -6,9 +6,9 @@ import { Menu, X, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { label: "Projets", href: "#projects" },
-  { label: "Compétences", href: "#skills" },
-  { label: "Parcours", href: "#timeline" },
+  { label: "Projets", href: "/#projects" },
+  { label: "Compétences", href: "/#skills" },
+  { label: "Parcours", href: "/#timeline" },
   { label: "Blog", href: "/blog" },
   { label: "À propos", href: "/about" },
 ];

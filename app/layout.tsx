@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/components/sections/Header";
+import { Footer } from "@/components/sections/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://portfolio-web-gules-nu.vercel.app/"),
+  metadataBase: new URL("https://portfolio-web-gules-nu.vercel.app"),
   title: {
     default: "Maxime BENE — Développeur en reconversion cybersécurité",
     template: "%s | Maxime BENE",
@@ -30,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: "https://maximebene.fr",
+    url: "https://portfolio-web-gules-nu.vercel.app",
     siteName: "Maxime BENE — Portfolio",
     title: "Maxime BENE — Développeur en reconversion cybersécurité",
     description:
@@ -52,7 +54,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className={inter.variable}>
       <body className="min-h-screen bg-background font-sans antialiased">
-        {children}
+        <Header />
+        <main className="pt-16">{children}</main>
+        <Footer />
       </body>
     </html>
   );

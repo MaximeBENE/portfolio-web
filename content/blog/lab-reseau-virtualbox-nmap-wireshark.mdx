@@ -1,0 +1,161 @@
+---
+title: "Mettre en place un lab réseau isolé avec VirtualBox, Nmap et Wireshark"
+description: "Comment j'ai construit mon laboratoire de cybersécurité avec Kali Linux et Ubuntu pour m'entraîner à l'analyse réseau en toute sécurité."
+date: "2025-09-20"
+tags: ["Lab", "VirtualBox", "Nmap", "Wireshark", "Kali Linux"]
+published: true
+---
+
+## Pourquoi un lab isolé ?
+
+Avant de scanner quoi que ce soit, il faut comprendre une règle fondamentale : **on ne scanne jamais un réseau sans autorisation**. C'est illégal, et c'est la première chose qu'un recruteur vérifiera.
+
+Pour m'entraîner sereinement, j'ai donc construit un **laboratoire virtualisé** : deux machines virtuelles qui communiquent entre elles sur un réseau privé, totalement isolé d'Internet.
+
+- **Kali Linux** : le poste d'attaque et d'analyse
+- **Ubuntu Server** : la cible
+
+## Configuration réseau
+
+### Les modes réseau de VirtualBox
+
+| Mode | Description | Usage |
+|:---|:---|:---|
+| **NAT** | Accès Internet via l'hôte | Mises à jour, téléchargements |
+| **Host-Only** | Réseau privé isolé entre VMs | Tests sécurisés (Nmap, Wireshark) |
+| **Bridged** | VM visible sur le réseau local | À éviter pour l'apprentissage |
+
+Pour mon lab, j'utilise **Host-Only** : les VMs se voient entre elles mais ne peuvent pas atteindre Internet, et Internet ne peut pas les atteindre.
+
+### Attribution des IP
+
+| Machine | Rôle | IP | Interface |
+|:---|:---|:---|:---|
+| Kali Linux | Attaque / Analyse | `192.168.149.129` | `eth0` |
+| Ubuntu | Cible / Serveur | `192.168.149.130` | `ens33` |
+
+## Vérifier la connectivité
+
+Première chose après le démarrage des VMs : vérifier qu'elles se voient.
+
+```bash
+# Sur Kali
+ping -c 4 192.168.149.130
+```
+
+Si le ping passe, on peut commencer.
+
+## Découverte avec Nmap
+
+### Ping sweep
+
+Pour trouver les machines en ligne sur le réseau :
+
+```bash
+sudo nmap -sn 192.168.149.0/24
+```
+
+Cette commande envoie des requêtes ICMP et ARP à toutes les IP du sous-réseau. Résultat : la liste des hôtes actifs.
+
+### Scan SYN (stealth)
+
+Le scan SYN est le plus utilisé car il est **rapide** et **discret** :
+
+```bash
+sudo nmap -sS 192.168.149.130
+```
+
+Il envoie un paquet SYN, reçoit un SYN-ACK si le port est ouvert, puis envoie un RST pour fermer la connexion — sans jamais terminer le three-way handshake.
+
+### Détection de version
+
+```bash
+sudo nmap -sV 192.168.149.130
+```
+
+Nmap identifie la version exacte des services qui tournent sur les ports ouverts. Très utile pour repérer des versions vulnérables.
+
+## Capturer avec Wireshark
+
+Pendant que Nmap scanne, Wireshark capture tout le trafic. C'est là que ça devient intéressant : on **voit** ce que Nmap fait au niveau paquet.
+
+### Filtres indispensables
+
+```
+# Trafic vers/depuis une IP
+ip.addr == 192.168.149.130
+
+# Trafic sur un port spécifique
+tcp.port == 80
+
+# Uniquement les SYN (début de connexion)
+tcp.flags.syn == 1
+
+# SYN sans ACK (scan)
+tcp.flags.syn == 1 && tcp.flags.ack == 0
+```
+
+### Les trois états d'un port
+
+| Réponse Nmap | Réponse Wireshark | Interprétation |
+|:---|:---|:---|
+| `open` | SYN-ACK | Un service écoute sur ce port |
+| `closed` | RST | Aucun service sur ce port |
+| `filtered` | Aucune réponse | Pare-feu ou machine hors ligne |
+
+## Analyse d'une connexion HTTP complète
+
+Pour tester, j'ai utilisé `curl` plutôt qu'un navigateur — c'est plus lisible dans Wireshark :
+
+```bash
+curl http://192.168.149.130
+```
+
+### Le three-way handshake
+
+| Paquet | Source → Destination | Flags |
+|:---|:---|:---|
+| 1 | Kali → Ubuntu | SYN |
+| 2 | Ubuntu → Kali | SYN, ACK |
+| 3 | Kali → Ubuntu | ACK |
+
+### L'échange HTTP
+
+| Paquet | Source → Destination | Contenu |
+|:---|:---|:---|
+| 4 | Kali → Ubuntu | `GET / HTTP/1.1` |
+| 5 | Ubuntu → Kali | `HTTP/1.1 200 OK` |
+
+### La fermeture
+
+| Paquet | Source → Destination | Flags |
+|:---|:---|:---|
+| 6 | Kali → Ubuntu | FIN, ACK |
+| 7 | Ubuntu → Kali | FIN, ACK |
+| 8 | Kali → Ubuntu | ACK |
+
+## Bonnes pratiques
+
+- ✅ **Toujours** utiliser un réseau Host-Only pour les tests
+- ✅ **Jamais** scanner une machine sans autorisation écrite
+- ✅ Lancer la capture Wireshark **avant** de générer le trafic
+- ✅ Vérifier la connectivité (`ping`) avant de scanner
+- ✅ Utiliser `sudo` avec Nmap pour les scans avancés
+
+## Ce que j'en retiens
+
+Ce lab m'a permis de comprendre **concrètement** :
+
+1. La différence entre un port ouvert, fermé et filtré
+2. Comment un scan SYN se déroule au niveau paquet
+3. À quoi ressemble un three-way handshake TCP
+4. Pourquoi Nmap est l'outil de référence en reconnaissance
+
+C'est une base indispensable pour tout analyste SOC — comprendre ce qu'on voit dans les logs, c'est comprendre ce qui s'est passé sur le réseau.
+
+## Prochaines étapes
+
+- Explorer les scripts NSE (Nmap Scripting Engine)
+- Analyser du trafic chiffré (HTTPS)
+- Tester d'autres protocoles (SSH, FTP, DNS)
+- Détecter automatiquement les scans avec un outil comme [mon Network Packet Analyzer](/projects/network-analyzer)
