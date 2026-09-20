@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Maxime BENE", url: "https://www.maximebene.com" }],
   creator: "Maxime BENE",
-  openGraph: {
+   openGraph: {
     type: "website",
     locale: "fr_FR",
     url: "https://www.maximebene.com",
@@ -41,15 +41,20 @@ export const metadata: Metadata = {
     title: "Maxime BENE — Développeur en reconversion cybersécurité",
     description:
       "Portfolio de Maxime BENE, spécialisation SOC N1, analyse réseau et détection d'intrusions.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Maxime BENE — Portfolio Cybersécurité",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Maxime BENE — Portfolio Cybersécurité",
     description: "Développeur web en reconversion vers la cybersécurité (SOC N1).",
-  },
-  robots: {
-    index: true,
-    follow: true,
+    images: ["/og-image.png"],
   },
 };
 
