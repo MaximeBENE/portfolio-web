@@ -12,7 +12,45 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  // ... garde ton metadata existant
+  metadataBase: new URL("https://www.maximebene.com"),
+  title: {
+    default: "Maxime BENE — Développeur en reconversion cybersécurité",
+    template: "%s | Maxime BENE",
+  },
+  description:
+    "Portfolio de Maxime BENE, développeur web en reconversion vers la cybersécurité. Spécialisation SOC N1, analyse réseau et détection d'intrusions.",
+  keywords: [
+    "cybersécurité",
+    "SOC N1",
+    "analyste SOC",
+    "réseau",
+    "Python",
+    "Next.js",
+    "portfolio",
+    "Wireshark",
+    "Nmap",
+    "Scapy",
+  ],
+  authors: [{ name: "Maxime BENE", url: "https://www.maximebene.com" }],
+  creator: "Maxime BENE",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: "https://www.maximebene.com",
+    siteName: "Maxime BENE — Portfolio",
+    title: "Maxime BENE — Développeur en reconversion cybersécurité",
+    description:
+      "Portfolio de Maxime BENE, spécialisation SOC N1, analyse réseau et détection d'intrusions.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Maxime BENE — Portfolio Cybersécurité",
+    description: "Développeur web en reconversion vers la cybersécurité (SOC N1).",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
