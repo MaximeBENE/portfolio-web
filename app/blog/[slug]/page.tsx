@@ -8,6 +8,7 @@ import rehypeSlug from "rehype-slug";
 import rehypePrettyCode from "rehype-pretty-code";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -70,6 +71,26 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="prose prose-neutral dark:prose-invert max-w-none">
           <MDXRemote
             source={post.content}
+            components={{
+              img: (props) => (
+                <Image
+                  {...props}
+                  width={props.width ?? 1200}
+                  height={props.height ?? 700}
+                  className="my-6 rounded-lg border border-border/60"
+                  alt={props.alt ?? ""}
+                />
+              ),
+              Image: (props) => (
+                <Image
+                  {...props}
+                  width={props.width ?? 1200}
+                  height={props.height ?? 700}
+                  className="my-6 rounded-lg border border-border/60"
+                  alt={props.alt ?? ""}
+                />
+              ),
+            }}
             options={{
               mdxOptions: {
                 remarkPlugins: [remarkGfm],
