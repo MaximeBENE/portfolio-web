@@ -7,6 +7,7 @@ const navItems = [
   { label: "Compétences", href: "#skills" },
   { label: "Parcours", href: "#timeline" },
   { label: "Blog", href: "/blog" },
+  { label: "CV", href: "/cv" },
   { label: "À propos", href: "/about" },
 ];
 

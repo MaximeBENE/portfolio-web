@@ -10,6 +10,7 @@ const navItems = [
   { label: "Projets", href: "/#projects" },
   { label: "Compétences", href: "/#skills" },
   { label: "Parcours", href: "/#timeline" },
+  { label: "CV", href: "/cv" },
   { label: "Blog", href: "/blog" },
   { label: "À propos", href: "/about" },
 ];
