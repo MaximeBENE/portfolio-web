@@ -53,7 +53,7 @@ Dans mon cas, tout était virtuellement connecté. Je passe à la couche suivant
 
 **La question :** les machines se voient-elles sur le réseau local ?
 
-Dans mon lab, les deux VMs sont sur le même réseau `192.168.149.0/24`. Elles devraient se voir en ARP.
+Dans mon lab, les deux VMs sont sur le même réseau `192.168.244.0/24`. Elles devraient se voir en ARP.
 
 **Comment vérifier :**
 
@@ -85,7 +85,7 @@ ip a
 
 **Ce que je regarde :**
 - L'interface a-t-elle une **IP** ?
-- Est-elle dans la **bonne plage** ? (dans mon lab : `192.168.149.x`)
+- Est-elle dans la **bonne plage** ? (dans mon lab : `192.168.244.x`)
 - Le **masque** est-il correct ?
 
 **Indice immédiat :** si l'IP commence par `169.254.x.x`, c'est que le **DHCP n'a pas répondu**. La machine s'est attribuée une adresse "auto-configurée" qui ne marchera pas sur le réseau.
@@ -107,10 +107,10 @@ Chez moi : réponse OK.
 
 ### Tester la passerelle
 
-Dans mon lab, la passerelle est `192.168.149.1` (VirtualBox).
+Dans mon lab, la passerelle est `192.168.244.2` (VirtualBox).
 
 ```bash
-ping 192.168.149.1
+ping 192.168.244.2
 ```
 
 - **Réponse** → la communication locale fonctionne
@@ -139,7 +139,7 @@ ip route
 ```
 
 **Ce que je regarde :**
-- Y a-t-il une ligne `default via 192.168.149.1` ?
+- Y a-t-il une ligne `default via 192.168.244.2` ?
 - Si oui, la route par défaut est bien configurée
 
 Dans mon cas, la route était absente. **C'était ça.**
@@ -149,13 +149,13 @@ Dans mon cas, la route était absente. **C'était ça.**
 J'ai ajouté la route par défaut :
 
 ```bash
-sudo ip route add default via 192.168.149.1
+sudo ip route add default via 192.168.244.2
 ```
 
 Puis re-testé :
 
 ```bash
-ping 192.168.149.1
+ping 192.168.244.2
 ```
 
 **Réponse.**

@@ -64,7 +64,7 @@ const detections = [
     type: "Scan de ports",
     severity: "CRITIQUE",
     color: "text-red-500 bg-red-500/10 border-red-500/20",
-    example: "🚨 CRITIQUE — SCAN DE PORTS (interne) depuis 192.168.149.129 — 1000 ports distincts",
+    example: "🚨 CRITIQUE — SCAN DE PORTS (interne) depuis 192.168.244.131 — 1000 ports distincts",
   },
   {
     type: "Brute-force",
@@ -212,7 +212,7 @@ export default function NetworkAnalyzerPage() {
 {`📂 Lecture du fichier captures/test.pcapng...
 
 🔍 Exécution des analyses de sécurité...
-🚨 CRITIQUE - SCAN DE PORTS (interne) depuis 192.168.149.129 - 1000 ports distincts
+🚨 CRITIQUE - SCAN DE PORTS (interne) depuis 192.168.244.131 - 1000 ports distincts
 
 ============================================================
 📊 RAPPORT D'ANALYSE RÉSEAU
@@ -227,9 +227,9 @@ export default function NetworkAnalyzerPage() {
   Other: 14 (0.7%)
 
 🌐 Top 5 IPs les plus actives:
-  192.168.149.130 → 1107 paquets
-  192.168.149.129 → 1003 paquets
-  192.168.149.1 → 15 paquets
+  192.168.244.128 → 1107 paquets
+  192.168.244.131 → 1003 paquets
+  192.168.244.2 → 15 paquets
 
 🔌 Top 5 ports les plus sollicités:
   Port 53 (DNS) → 59 connexions
@@ -237,7 +237,7 @@ export default function NetworkAnalyzerPage() {
   Port 110 (POP3) → 1 connexions
 
 ⚠️  ÉVÉNEMENTS SUSPECTS DÉTECTÉS:
-  • 🚨 CRITIQUE - SCAN DE PORTS (interne) depuis 192.168.149.129 - 1000 ports distincts
+  • 🚨 CRITIQUE - SCAN DE PORTS (interne) depuis 192.168.244.131 - 1000 ports distincts
 
 ============================================================
 ✅ Exporté vers capture_report.json`}

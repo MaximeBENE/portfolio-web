@@ -36,7 +36,7 @@ sudo nmap [options] <cible>
 Pour trouver les machines actives sur un réseau **sans scanner les ports** :
 
 ```bash
-sudo nmap -sn 192.168.149.0/24
+sudo nmap -sn 192.168.244.0/24
 ```
 
 **Ce que ça fait :** envoie des requêtes ICMP (ping) et ARP à toutes les IP de la plage.
@@ -44,11 +44,11 @@ sudo nmap -sn 192.168.149.0/24
 **Résultat typique :**
 
 ```
-Nmap scan report for 192.168.149.129
+Nmap scan report for 192.168.244.131
 Host is up (0.00042s latency).
 MAC Address: 08:00:27:XX:XX:XX (Oracle VirtualBox)
 
-Nmap scan report for 192.168.149.130
+Nmap scan report for 192.168.244.128
 Host is up (0.00031s latency).
 ```
 
@@ -58,10 +58,12 @@ Host is up (0.00031s latency).
 
 ### Scan SYN (`-sS`) — le "stealth scan"
 
+![Scan Nmap SYN en action sur Kali](/images/blog/nmap-guide/nmap-scan.png)
+
 Le scan le plus utilisé. Rapide, discret, et il ne termine **jamais** la connexion TCP.
 
 ```bash
-sudo nmap -sS 192.168.149.130
+sudo nmap -sS 192.168.244.128
 ```
 
 **Comment ça marche :**
@@ -78,7 +80,7 @@ sudo nmap -sS 192.168.149.130
 Utilise la pile TCP du système d'exploitation. **Plus visible** (connexion complète établie) mais fonctionne sans privilèges root.
 
 ```bash
-nmap -sT 192.168.149.130
+nmap -sT 192.168.244.128
 ```
 
 **Quand l'utiliser :** si tu n'as pas `sudo`, ou si tu veux être certain du résultat (le handshake est complet).
@@ -90,7 +92,7 @@ nmap -sT 192.168.149.130
 Identifie la **version exacte** du logiciel qui tourne sur chaque port ouvert.
 
 ```bash
-sudo nmap -sV 192.168.149.130
+sudo nmap -sV 192.168.244.128
 ```
 
 **Résultat typique :**
@@ -108,7 +110,7 @@ PORT   STATE SERVICE VERSION
 Devine le système d'exploitation cible via l'empreinte TCP/IP.
 
 ```bash
-sudo nmap -O 192.168.149.130
+sudo nmap -O 192.168.244.128
 ```
 
 **Résultat typique :**
@@ -126,7 +128,7 @@ OS details: Linux 5.0 - 5.14
 Combine **détection de version + OS + traceroute + scripts par défaut** :
 
 ```bash
-sudo nmap -A 192.168.149.130
+sudo nmap -A 192.168.244.128
 ```
 
 **Ce que ça active :**
@@ -144,19 +146,19 @@ sudo nmap -A 192.168.149.130
 ### Scan d'un port précis
 
 ```bash
-sudo nmap -p 80 192.168.149.130
+sudo nmap -p 80 192.168.244.128
 ```
 
 ### Scan d'une plage
 
 ```bash
-sudo nmap -p 1-1000 192.168.149.130
+sudo nmap -p 1-1000 192.168.244.128
 ```
 
 ### Scan de TOUS les ports
 
 ```bash
-sudo nmap -p- 192.168.149.130
+sudo nmap -p- 192.168.244.128
 ```
 
 **⚠️ Attention :** scanne les 65535 ports TCP. Peut prendre **plusieurs minutes** selon la cible.
@@ -164,7 +166,7 @@ sudo nmap -p- 192.168.149.130
 ### Top ports
 
 ```bash
-sudo nmap --top-ports=100 192.168.149.130
+sudo nmap --top-ports=100 192.168.244.128
 ```
 
 **Bon compromis** vitesse / efficacité. Nmap scanne les N ports les plus fréquemment ouverts.
@@ -174,7 +176,7 @@ sudo nmap --top-ports=100 192.168.149.130
 ### Ne pas résoudre les DNS (`-n`)
 
 ```bash
-sudo nmap -n -sS 192.168.149.130
+sudo nmap -n -sS 192.168.244.128
 ```
 
 **Gain de vitesse** considérable sur les grandes plages.
@@ -182,7 +184,7 @@ sudo nmap -n -sS 192.168.149.130
 ### Verbeux (`-v`)
 
 ```bash
-sudo nmap -v -sS 192.168.149.130
+sudo nmap -v -sS 192.168.244.128
 ```
 
 Affiche la progression en temps réel.
@@ -190,7 +192,7 @@ Affiche la progression en temps réel.
 ### Sauvegarder les résultats (`-oA`)
 
 ```bash
-sudo nmap -A -oA scan_complet 192.168.149.130
+sudo nmap -A -oA scan_complet 192.168.244.128
 ```
 
 Génère **3 fichiers** :
@@ -218,7 +220,7 @@ Génère **3 fichiers** :
 Nmap peut exécuter des **scripts Lua** pour aller plus loin. Le plus utile en reconnaissance :
 
 ```bash
-sudo nmap --script vuln 192.168.149.130
+sudo nmap --script vuln 192.168.244.128
 ```
 
 **Catégories principales :**
@@ -234,7 +236,7 @@ sudo nmap --script vuln 192.168.149.130
 **Exemple — détecter une faille SMB :**
 
 ```bash
-sudo nmap --script smb-vuln-ms17-010 192.168.149.130
+sudo nmap --script smb-vuln-ms17-010 192.168.244.128
 ```
 
 ## Détecter un scan Nmap (côté SOC)
@@ -269,28 +271,28 @@ tcp.flags.syn == 1 && tcp.flags.ack == 0
 
 ```bash
 # Découverte
-sudo nmap -sn 192.168.149.0/24
+sudo nmap -sn 192.168.244.0/24
 
 # Scan SYN rapide
-sudo nmap -sS 192.168.149.130
+sudo nmap -sS 192.168.244.128
 
 # Détection de versions
-sudo nmap -sV 192.168.149.130
+sudo nmap -sV 192.168.244.128
 
 # Scan agressif complet
-sudo nmap -A 192.168.149.130
+sudo nmap -A 192.168.244.128
 
 # Top 100 ports
-sudo nmap --top-ports=100 192.168.149.130
+sudo nmap --top-ports=100 192.168.244.128
 
 # Tous les ports
-sudo nmap -p- 192.168.149.130
+sudo nmap -p- 192.168.244.128
 
 # Détection de vulnérabilités SMB
-sudo nmap --script smb-vuln-ms17-010 192.168.149.130
+sudo nmap --script smb-vuln-ms17-010 192.168.244.128
 
 # Sauvegarder
-sudo nmap -A -oA scan_complet 192.168.149.130
+sudo nmap -A -oA scan_complet 192.168.244.128
 ```
 
 ## Pour aller plus loin

@@ -1,0 +1,239 @@
+---
+title: "Détecter un ARP Spoofing avec Python — du lab à l'alerte"
+description: "Comment j'ai codé un détecteur d'ARP Spoofing en Python avec Scapy, testé contre une vraie attaque dans mon lab Kali/Ubuntu, et obtenu une alerte Man-in-the-Middle en temps réel."
+date: "2025-09-27"
+tags: ["Python", "Scapy", "ARP", "Sécurité", "Man-in-the-Middle", "SOC"]
+published: true
+---
+
+## Le problème
+
+Sur un réseau local, tout le monde se fait confiance. **Trop confiance.**
+
+Quand ton PC veut parler à la passerelle (le routeur), il envoie une question ARP :
+
+> *"Hé, qui a l'IP 192.168.244.2 ?"*
+
+Et la première machine qui répond *"C'est moi !"* est crue sur parole.
+
+**Il n'y a aucune authentification.**
+
+Un attaquant peut donc répondre à la place du routeur, en disant *"La passerelle, c'est MA MAC"*. À partir de ce moment-là, tout le trafic de la victime passe par l'attaquant.
+
+C'est **l'ARP Spoofing**, et c'est la base du **Man-in-the-Middle** sur réseau local.
+
+## Ce qu'on va faire
+
+Je vais te montrer comment j'ai codé un détecteur en Python avec **Scapy**, puis comment je l'ai testé contre une **vraie attaque** dans mon lab VirtualBox (Kali + Ubuntu).
+
+À la fin, tu sauras :
+- Reconnaître la signature d'une attaque ARP Spoofing
+- Détecter un changement de MAC suspect
+- Prioriser une alerte selon le contexte (passerelle ou pas)
+- Identifier la cible visée
+
+## Le lab
+
+- **Kali Linux** — détecteur (poste qui surveille)
+- **Ubuntu Server** — attaquant (celui qui lance `arpspoof`)
+- **Réseau Host-Only VirtualBox** — isolé d'Internet
+
+| VM | IP | Rôle |
+|:---|:---|:---|
+| Kali | `192.168.244.131` | Détecteur |
+| Ubuntu | `192.168.244.128` | Attaquant |
+| Passerelle VirtualBox | `192.168.244.2` | Cible usurpée |
+
+## Comment fonctionne l'attaque
+
+`arpspoof` (inclus dans Kali via `dsniff`) envoie en boucle :
+
+> *"192.168.244.2 (la passerelle) est à [MAC de l'attaquant]"*
+
+À la victime. Elle en déduit que la passerelle est l'attaquant. Tout son trafic part vers lui.
+
+## Comment détecter
+
+La signature est simple : **une IP change de MAC**.
+
+Une IP ne devrait **jamais** changer de MAC dans un réseau normal. Si ça arrive, c'est soit :
+- Un remplacement matériel légitime (rare)
+- **Une attaque ARP Spoofing** (probable)
+
+Le détecteur garde une **table ARP légitime** et alerte dès qu'un changement est détecté.
+
+## Le code
+
+J'ai ajouté un module `arp_detector.py` à mon projet [Network Packet Analyzer](/projects/network-analyzer).
+
+### Structure générale
+
+```python
+class ARPSpoofDetector:
+    def __init__(self, interface=None):
+        self.interface = interface
+        self.arp_table = {}          # {ip: mac} — table légitime
+        self.changes = defaultdict(list)
+        self.alerts = []
+
+    def analyze_packet(self, packet):
+        if not packet.haslayer(ARP):
+            return
+        arp = packet[ARP]
+        if arp.op == 2:  # Réponse ARP uniquement
+            self._check_arp_reply(arp.psrc, arp.hwsrc, arp.pdst)
+```
+
+### Le cœur : détecter un changement de MAC
+
+```python
+def _check_arp_reply(self, ip, mac, target_ip):
+    mac = mac.lower()
+
+    # Première fois qu'on voit cette IP → on enregistre
+    if ip not in self.arp_table:
+        self.arp_table[ip] = mac
+        return
+
+    # Même MAC → RAS
+    if self.arp_table[ip] == mac:
+        return
+
+    # Changement de MAC → SUSPECT
+    old_mac = self.arp_table[ip]
+    severity = "🚨 CRITIQUE" if self._is_gateway(ip) else "⚠️  ÉLEVÉ"
+
+    alert = (
+        f"{severity} - ARP SPOOFING potentiel : "
+        f"l'IP {ip} a changé de MAC ({old_mac} → {mac})"
+    )
+    self.alerts.append(alert)
+    print_colored(alert, "red")
+
+    # Met à jour la table
+    self.arp_table[ip] = mac
+```
+
+**Trois lignes suffisent** pour détecter l'attaque :
+1. Si l'IP est inconnue → on mémorise sa MAC
+2. Si la MAC est la même → RAS
+3. Si la MAC a changé → **alerte**
+
+### Détection intelligente de la passerelle
+
+Pour graduer la sévérité, il faut savoir si l'IP usurpée est la passerelle.
+
+J'utilise `ip route` pour la trouver :
+
+```python
+def _is_gateway(self, ip):
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["ip", "route", "show", "default"],
+            capture_output=True, text=True, timeout=2,
+        )
+        if "default via" in result.stdout:
+            gateway_ip = result.stdout.split("via")[1].strip().split()[0]
+            return ip == gateway_ip
+    except Exception:
+        pass
+    return ip.endswith(".1") or ip.endswith(".254")
+```
+
+**Pourquoi c'est important :** si l'attaquant usurpe l'identité de la passerelle, **tout le trafic de la victime** est intercepté. C'est **critique**.
+
+Si l'attaquant usurpe une machine standard, c'est **élevé** mais moins grave.
+
+## Le test dans le lab
+
+### Étape 1 : Lancer le détecteur sur Kali
+
+```bash
+sudo python main.py --arp --interface eth1
+```
+
+```
+🎯 Surveillance ARP sur l'interface eth1...
+⏱️  Durée : 30s (Ctrl+C pour arrêter)
+```
+
+### Étape 2 : Lancer l'attaque depuis Ubuntu
+
+![Terminal Ubuntu avec arpspoof en action](/images/blog/arp-spoofing/attaque-arpspoof.png)
+
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo arpspoof -i ens33 -t 192.168.244.131 192.168.244.2
+```
+
+**Décodage :**
+- `-i ens33` → interface Ubuntu (Host-Only)
+- `-t 192.168.244.131` → **cible** = Kali
+- `192.168.244.2` → **IP usurpée** = la passerelle
+
+### Étape 3 : Observer l'alerte
+
+![Détection ARP Spoofing sur Kali](/images/blog/arp-spoofing/detection-alerte.png)
+
+Sur Kali, quelques secondes après le lancement :
+
+```
+🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC (00:0c:29:5a:f2:c6 → 00:50:56:ed:cd:e9)
+   La cible 192.168.244.131 est visée. Possible Man-in-the-Middle.
+```
+
+**Décodage :**
+- **IP usurpée** : `192.168.244.2` (la passerelle)
+- **Ancienne MAC** : `00:0c:29:5a:f2:c6` (vraie passerelle)
+- **Nouvelle MAC** : `00:50:56:ed:cd:e9` (Ubuntu, l'attaquant)
+- **Cible visée** : `192.168.244.131` (Kali)
+- **Sévérité** : CRITIQUE (car c'est la passerelle)
+
+### Le rapport final
+
+```
+============================================================
+📊 RAPPORT ARP SPOOFING
+============================================================
+
+📦 Paquets ARP analysés : 20
+   Requêtes : 11
+   Réponses : 9
+
+📋 Taille table ARP : 2 entrées
+
+⚠️  2 changements suspects détectés
+  • 🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC
+  • 🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC
+
+✅ Exporté vers arp_report.json
+```
+
+## Ce que ça démontre en SOC
+
+Cette petite détection, c'est **exactement** ce que fait un IDS en production.
+
+| Compétence | Démonstration |
+|:---|:---|
+| **Compréhension ARP** | Tu sais comment fonctionne l'ARP et où sont ses failles |
+| **Détection par signature** | Tu reconnais le pattern "changement de MAC" |
+| **Priorisation** | Tu sais distinguer une attaque critique (passerelle) d'une attaque élevée |
+| **Corrélation de contexte** | Tu identifies la cible visée (`pdst`) |
+| **Scripting Python** | Tu codes un outil de détection, pas juste tu utilises Wireshark |
+| **Méthodologie lab** | Tu testes contre une vraie attaque, en environnement isolé |
+
+**C'est ce qui te différencie d'un candidat qui a juste "lu la doc OWASP".**
+
+## Les limites du détecteur
+
+- **Passif** : il alerte mais ne bloque pas. Pour bloquer, il faudrait un module actif (envoyer des ARP correctifs, ce qui est une autre histoire).
+- **Local** : il ne voit que le trafic qui arrive à sa machine. Pour surveiller tout un réseau, il faudrait un switch avec port mirroring ou un IDS dédié (Suricata, Zeek).
+- **Faux positifs** : un vrai changement matériel (nouvelle carte réseau) déclenchera une alerte. C'est rare mais possible.
+
+## Pour aller plus loin
+
+- [Network Packet Analyzer — mini-IDS Python](/projects/network-analyzer)
+- [Détecteur ARP Spoofing — page projet](/projects/arp-spoofing-detector)
+- [Mettre en place un lab réseau isolé avec VirtualBox](/blog/lab-reseau-virtualbox-nmap-wireshark)
+- [Analyser un scan Nmap avec Wireshark](/blog/analyser-scan-nmap-wireshark)

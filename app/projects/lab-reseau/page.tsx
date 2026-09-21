@@ -75,19 +75,19 @@ const stack = [
 const scenarios = [
   {
     title: "Découverte d'hôtes",
-    command: "sudo nmap -sn 192.168.149.0/24",
+    command: "sudo nmap -sn 192.168.244.0/24",
     result: "Identification des machines actives sur le réseau",
     icon: <Network className="h-4 w-4" />,
   },
   {
     title: "Scan de ports SYN",
-    command: "sudo nmap -sS 192.168.149.130",
+    command: "sudo nmap -sS 192.168.244.128",
     result: "1000 ports scannés, détection des services ouverts",
     icon: <Terminal className="h-4 w-4" />,
   },
   {
     title: "Détection de versions",
-    command: "sudo nmap -sV 192.168.149.130",
+    command: "sudo nmap -sV 192.168.244.128",
     result: "OpenSSH 8.9p1, Apache httpd 2.4.52 identifiés",
     icon: <Eye className="h-4 w-4" />,
   },
@@ -203,8 +203,8 @@ export default function LabReseauPage() {
                 <h3 className="font-semibold text-red-500">Kali Linux</h3>
                 <p className="mt-1 text-sm text-muted-foreground">Poste d&apos;attaque / Analyse</p>
                 <div className="mt-3 space-y-1 font-mono text-xs">
-                  <p>IP : 192.168.149.129</p>
-                  <p>Interface : eth0</p>
+                  <p>IP : 192.168.244.131</p>
+                  <p>Interface : eth1</p>
                   <p>Rôle : Nmap, Wireshark, curl</p>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function LabReseauPage() {
                 <h3 className="font-semibold text-emerald-500">Ubuntu Server</h3>
                 <p className="mt-1 text-sm text-muted-foreground">Cible / Serveur</p>
                 <div className="mt-3 space-y-1 font-mono text-xs">
-                  <p>IP : 192.168.149.130</p>
+                  <p>IP : 192.168.244.128</p>
                   <p>Interface : ens33</p>
                   <p>Services : Apache (80), SSH (22)</p>
                 </div>

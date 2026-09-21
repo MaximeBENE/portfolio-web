@@ -18,15 +18,15 @@ Cet article montre, capture Wireshark à l'appui, ce qui se passe réellement su
 
 ### Le lab
 
-- **Kali** (`192.168.149.129`) → poste d'attaque et d'analyse
-- **Ubuntu** (`192.168.149.130`) → cible avec Apache sur le port 80
+- **Kali** (`192.168.244.131`) → poste d'attaque et d'analyse
+- **Ubuntu** (`192.168.244.128`) → cible avec Apache sur le port 80
 
 ### Le filtre Wireshark de base
 
 Avant même de commencer, applique ce filtre pour ne voir que le trafic entre les deux machines :
 
 ```
-ip.addr == 192.168.149.130 && ip.addr == 192.168.149.129
+ip.addr == 192.168.244.128 && ip.addr == 192.168.244.131
 ```
 
 **Sans ce filtre**, Wireshark capture aussi le bruit de fond (ARP, mDNS, etc.) et c'est illisible.
@@ -35,16 +35,16 @@ ip.addr == 192.168.149.130 && ip.addr == 192.168.149.129
 
 **Règle d'or :** on lance **toujours** la capture avant de générer le trafic. Sinon on rate le début de l'échange.
 
-1. Dans Wireshark, sélectionne l'interface `eth0`
+1. Dans Wireshark, sélectionne l'interface `eth1`
 2. Clique sur la **nageoire bleue** (Start)
-3. Applique le filtre `ip.addr == 192.168.149.130`
+3. Applique le filtre `ip.addr == 192.168.244.128`
 
 ## Étape 2 — Lancer le scan depuis Kali
 
 Dans un terminal Kali :
 
 ```bash
-sudo nmap -sS 192.168.149.130
+sudo nmap -sS 192.168.244.128
 ```
 
 **Ce que fait ce scan :**
@@ -59,12 +59,12 @@ sudo nmap -sS 192.168.149.130
 
 | # | Source | Destination | Protocole | Info |
 |:---:|:---|:---|:---|:---|
-| 1 | 192.168.149.129 | 192.168.149.130 | TCP | 54321 → 22 [SYN] |
-| 2 | 192.168.149.130 | 192.168.149.129 | TCP | 22 → 54321 [SYN, ACK] |
-| 3 | 192.168.149.129 | 192.168.149.130 | TCP | 54321 → 22 [RST] |
-| 4 | 192.168.149.129 | 192.168.149.130 | TCP | 54322 → 23 [SYN] |
-| 5 | 192.168.149.130 | 192.168.149.129 | TCP | 23 → 54322 [RST, ACK] |
-| 6 | 192.168.149.129 | 192.168.149.130 | TCP | 54323 → 25 [SYN] |
+| 1 | 192.168.244.131 | 192.168.244.128 | TCP | 54321 → 22 [SYN] |
+| 2 | 192.168.244.128 | 192.168.244.131 | TCP | 22 → 54321 [SYN, ACK] |
+| 3 | 192.168.244.131 | 192.168.244.128 | TCP | 54321 → 22 [RST] |
+| 4 | 192.168.244.131 | 192.168.244.128 | TCP | 54322 → 23 [SYN] |
+| 5 | 192.168.244.128 | 192.168.244.131 | TCP | 23 → 54322 [RST, ACK] |
+| 6 | 192.168.244.131 | 192.168.244.128 | TCP | 54323 → 25 [SYN] |
 | ... | ... | ... | ... | ... |
 
 **Deux comportements à repérer :**
@@ -73,6 +73,8 @@ sudo nmap -sS 192.168.149.130
 - **Port fermé (23, 25…)** : SYN → **RST-ACK**
 
 ### Lecture des flags TCP
+
+![Capture Wireshark d'un scan Nmap](/images/blog/wireshark-scan/wireshark-scan.png)
 
 | Flag | Signification |
 |:---|:---|
@@ -134,7 +136,7 @@ tcp.port == 22
 ### Combiner
 
 ```
-ip.addr == 192.168.149.130 && tcp.port == 80 && tcp.flags.syn == 1
+ip.addr == 192.168.244.128 && tcp.port == 80 && tcp.flags.syn == 1
 ```
 
 → Tous les SYN vers le port 80 de l'Ubuntu.
@@ -194,7 +196,7 @@ En SOC, un scan Nmap se détecte par **accumulation d'indices** :
 **Avec mon outil [Network Packet Analyzer](/projects/network-analyzer) :**
 
 ```
-🚨 CRITIQUE — SCAN DE PORTS (interne) depuis 192.168.149.129 — 1000 ports distincts
+🚨 CRITIQUE — SCAN DE PORTS (interne) depuis 192.168.244.131 — 1000 ports distincts
 ```
 
 → Détection automatique basée sur le même principe.

@@ -29,10 +29,13 @@ Pour mon lab, j'utilise **Host-Only** : les VMs se voient entre elles mais ne pe
 
 ### Attribution des IP
 
+![Interfaces réseau des VMs Kali et Ubuntu](/images/blog/lab-reseau/ip-addresses.png)
+
 | Machine | Rôle | IP | Interface |
 |:---|:---|:---|:---|
-| Kali Linux | Attaque / Analyse | `192.168.149.129` | `eth0` |
-| Ubuntu | Cible / Serveur | `192.168.149.130` | `ens33` |
+| Kali Linux | Attaque / Analyse | `192.168.244.131` | `eth1` |
+| Ubuntu | Cible / Serveur | `192.168.244.128` | `ens33` |
+| Passerelle (VirtualBox) | Routeur | `192.168.244.2` | — |
 
 ## Vérifier la connectivité
 
@@ -40,7 +43,7 @@ Première chose après le démarrage des VMs : vérifier qu'elles se voient.
 
 ```bash
 # Sur Kali
-ping -c 4 192.168.149.130
+ping -c 4 192.168.244.128
 ```
 
 Si le ping passe, on peut commencer.
@@ -52,7 +55,7 @@ Si le ping passe, on peut commencer.
 Pour trouver les machines en ligne sur le réseau :
 
 ```bash
-sudo nmap -sn 192.168.149.0/24
+sudo nmap -sn 192.168.244.0/24
 ```
 
 Cette commande envoie des requêtes ICMP et ARP à toutes les IP du sous-réseau. Résultat : la liste des hôtes actifs.
@@ -62,7 +65,7 @@ Cette commande envoie des requêtes ICMP et ARP à toutes les IP du sous-réseau
 Le scan SYN est le plus utilisé car il est **rapide** et **discret** :
 
 ```bash
-sudo nmap -sS 192.168.149.130
+sudo nmap -sS 192.168.244.128
 ```
 
 Il envoie un paquet SYN, reçoit un SYN-ACK si le port est ouvert, puis envoie un RST pour fermer la connexion — sans jamais terminer le three-way handshake.
@@ -70,7 +73,7 @@ Il envoie un paquet SYN, reçoit un SYN-ACK si le port est ouvert, puis envoie u
 ### Détection de version
 
 ```bash
-sudo nmap -sV 192.168.149.130
+sudo nmap -sV 192.168.244.128
 ```
 
 Nmap identifie la version exacte des services qui tournent sur les ports ouverts. Très utile pour repérer des versions vulnérables.
@@ -83,7 +86,7 @@ Pendant que Nmap scanne, Wireshark capture tout le trafic. C'est là que ça dev
 
 ```
 # Trafic vers/depuis une IP
-ip.addr == 192.168.149.130
+ip.addr == 192.168.244.128
 
 # Trafic sur un port spécifique
 tcp.port == 80
@@ -108,7 +111,7 @@ tcp.flags.syn == 1 && tcp.flags.ack == 0
 Pour tester, j'ai utilisé `curl` plutôt qu'un navigateur — c'est plus lisible dans Wireshark :
 
 ```bash
-curl http://192.168.149.130
+curl http://192.168.244.128
 ```
 
 ### Le three-way handshake
