@@ -45,15 +45,17 @@ const projects: Project[] = [
     status: "live",
   },
   {
-    title: "Détection ARP Spoofing",
+    title: "Détecteur ARP Spoofing",
     description:
-      "Extension du Network Analyzer pour détecter les empoisonnements ARP en temps réel. En cours de développement.",
-    tags: ["Python", "Scapy", "ARP", "IDS"],
+      "Détection en temps réel des attaques Man-in-the-Middle : surveille les réponses ARP, alerte sur les changements de MAC et identifie la cible visée.",
+    tags: ["Python", "Scapy", "ARP", "Sécurité"],
     icon: <Lock className="h-5 w-5" />,
-    iconBg: "bg-yellow-500/10",
-    iconColor: "text-yellow-500",
-    status: "planned",
-  },
+    iconBg: "bg-orange-500/10",
+    iconColor: "text-orange-500",
+    github: "https://github.com/MaximeBENE/network-analyzer",
+    detail: "/projects/arp-spoofing-detector",
+    status: "live",
+},
 ];
 
 const statusLabels = {
