@@ -38,7 +38,7 @@ export function Header() {
             </Link>
           ))}
           <ThemeToggle />
-          <Button size="sm" nativeButton={false} render={<a href="/cv.pdf" download />}>
+          <Button size="sm" nativeButton={false} render={<a href="/cv.pdf" download="CV-Maxime_BENE.pdf" />}>
             Télécharger mon CV
           </Button>
         </nav>
@@ -74,7 +74,7 @@ export function Header() {
               size="sm"
               className="mt-2"
               nativeButton={false}
-              render={<a href="/cv.pdf" download />}
+              render={<a href="/cv.pdf" download="CV-Maxime_BENE.pdf" />}
             >
               Télécharger mon CV
             </Button>
