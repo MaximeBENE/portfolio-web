@@ -6,7 +6,7 @@ export function CVContent() {
   const experiences = [
     {
       title: "DÉVELOPPEUR WEB — Sécurité applicative",
-      company: "PitchTrack — décembre 2025 à mars 2026 — Freelance",
+      company: "PitchTrack — Décembre 2025 à Mars 2026 — Freelance",
       tasks: [
         "Authentification sécurisée : Implémentation Google OAuth 2.0, gestion des sessions et contrôle des accès utilisateurs",
         "Protection des données : Sécurisation des échanges API Webflow/Wized/Xano, gestion des tokens et des droits",
@@ -17,7 +17,7 @@ export function CVContent() {
     },
     {
       title: "DÉVELOPPEUR WEB FULLSTACK",
-      company: "maximebene — Septembre 2024 à septembre 2025 — Intérim",
+      company: "maximebene — Septembre 2024 à Septembre 2025 — Intérim",
       tasks: [
         "Sécurité back-end : Authentification JWT, protection contre les injections SQL et attaques XSS, validation des entrées",
         "Front-end React.js : interfaces avec tri, filtrage, panier, modification de profil",
@@ -31,12 +31,11 @@ export function CVContent() {
       company: "MCCLOYD — Février 2023 à Mai 2024 — Alternance — Paris",
       tasks: [
         "Développement d'une plateforme sportive complète (coachs et athlètes) avec dashboard de gestion",
-        "Front-end React.js / Redux : interfaces dynamiques, visualisation de données (graphiques, tableaux)",
-        "Back-end Node.js / Express : gestion sécurisée des utilisateurs, performances et analyses",
-        "Base de données PostgreSQL/PgAdmin : stockage, requêtes optimisées, analyses comparatives"
+        "Front-end React.js / Redux : interfaces dynamiques, visualisation de données",
+        "Back-end Node.js / Express + PostgreSQL : gestion sécurisée des utilisateurs, requêtes optimisées"
       ],
-      bold: [2, 3]
-    }
+      bold: [1, 2]
+    },
   ];
 
   const projets = [
@@ -44,11 +43,10 @@ export function CVContent() {
       title: "NETWORK PACKET ANALYZER",
       context: "Projet portfolio — 2026 — Open source (GitHub)",
       tasks: [
-        "Développement d'un mini-IDS en Python (Scapy) : capture et analyse de trafic réseau .pcap/.pcapng",
-        "Détection automatique de scans de ports (Nmap) et de tentatives de brute-force (SSH, RDP, MySQL)",
-        "Distinction des alertes interne/externe (RFC1918), gradation de sévérité (MOYEN / ÉLEVÉ / CRITIQUE)",
-        "Export des rapports au format JSON compatible SIEM (Wazuh, Elasticsearch)",
-        "Tests en environnement virtualisé Kali ↔ Ubuntu avec génération de captures réelles"
+        "Mini-IDS en Python (Scapy) : capture et analyse de trafic réseau .pcap/.pcapng",
+        "Détection automatique de scans de ports (Nmap), brute-force (SSH, RDP, MySQL) et ARP Spoofing",
+        "Distinction interne/externe (RFC1918), gradation de sévérité (MOYEN / ÉLEVÉ / CRITIQUE)",
+        "Export JSON compatible SIEM (Wazuh, Elasticsearch), testé en lab Kali ↔ Ubuntu"
       ],
       bold: [0, 1, 2]
     },
@@ -56,13 +54,12 @@ export function CVContent() {
       title: "DÉTECTEUR ARP SPOOFING",
       context: "Extension du Network Analyzer — 2026 — Open source (GitHub)",
       tasks: [
-        "Détection en temps réel des attaques Man-in-the-Middle via surveillance des réponses ARP",
-        "Alerte sur changement de MAC suspect, identification de la cible visée",
-        "Détection intelligente de la passerelle (lecture de ip route) pour gradation CRITIQUE / ÉLEVÉ",
+        "Détection temps réel des attaques Man-in-the-Middle via surveillance ARP",
+        "Alerte sur changement de MAC suspect, gradation CRITIQUE / ÉLEVÉ",
         "Test réel contre arpspoof dans un lab Kali + Ubuntu isolé"
       ],
-      bold: [0, 2]
-    }
+      bold: [0, 1]
+    },
   ];
 
   const formations = [
@@ -161,11 +158,11 @@ export function CVContent() {
       fontSize: '12.5px',
       fontWeight: '400',
       marginTop: '3px',
-      marginBottom: '10px',
+      marginBottom: '8px',
       color: '#aaa',
       letterSpacing: '0.8px'
     },
-    qualities: { display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' as const },
+    qualities: { display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' as const },
     quality: {
       backgroundColor: 'rgba(57,255,20,0.1)',
       border: '1px solid rgba(57,255,20,0.35)',
@@ -176,8 +173,8 @@ export function CVContent() {
       fontWeight: '500'
     },
     contactInfo: { display: 'flex', gap: '16px', flexWrap: 'wrap' as const, fontSize: '11.5px', color: '#aaa' },
-    personalInfo: { marginTop: '5px', fontSize: '11px', color: '#666', margin: 0 },
-    intro: { fontSize: '11px', color: '#aaa', marginTop: '8px', marginBottom: 0, lineHeight: '1.5' },
+    personalInfo: { marginTop: '4px', fontSize: '11px', color: '#666', margin: 0 },
+    intro: { fontSize: '11px', color: '#aaa', marginTop: '6px', marginBottom: 0, lineHeight: '1.4' },
     poeBadge: {
       display: 'inline-block',
       backgroundColor: 'rgba(57,255,20,0.12)',
@@ -193,36 +190,36 @@ export function CVContent() {
       display: 'grid',
       gridTemplateColumns: '1.85fr 1fr'
     },
-    mainContent: { padding: '16px 24px 0' },
-    sidebar: { backgroundColor: '#f5f5f5', padding: '16px 15px 0' },
-    section: { marginBottom: '14px' },
+    mainContent: { padding: '12px 24px 0' },
+    sidebar: { backgroundColor: '#f5f5f5', padding: '12px 15px 0' },
+    section: { marginBottom: '10px' },
     sectionTitle: {
       color: black,
       fontWeight: '700',
-      fontSize: '12.5px',
-      marginBottom: '10px',
-      paddingBottom: '4px',
+      fontSize: '12px',
+      marginBottom: '8px',
+      paddingBottom: '3px',
       borderBottom: '2px solid ' + green,
       textTransform: 'uppercase' as const,
       letterSpacing: '0.2px'
     },
-    experienceItem: { marginBottom: '12px' },
+    experienceItem: { marginBottom: '10px' },
     jobTitle: { fontWeight: '700', fontSize: '12px', color: '#111' },
-    companyInfo: { color: '#777', fontSize: '10.5px', marginBottom: '6px', marginTop: '2px', fontStyle: 'italic' as const },
-    task: { color: '#444', fontSize: '10.5px', marginBottom: '3px', lineHeight: '1.5', margin: '0 0 3px 0' },
+    companyInfo: { color: '#777', fontSize: '10.5px', marginBottom: '4px', marginTop: '1px', fontStyle: 'italic' as const },
+    task: { color: '#444', fontSize: '10.5px', marginBottom: '2px', lineHeight: '1.4', margin: '0 0 2px 0' },
     taskBold: { fontWeight: '700', color: '#222' },
     formationTitle: { fontWeight: '700', fontSize: '11.5px', color: '#111' },
     formationSchool: { color: '#777', fontSize: '10.5px', marginTop: '2px', fontStyle: 'italic' as const },
-    skillsCategory: { marginBottom: '14px' },
+    skillsCategory: { marginBottom: '10px' },
     categoryTitle: {
       color: black,
       fontWeight: '700',
       fontSize: '10px',
-      marginBottom: '6px',
+      marginBottom: '5px',
       textTransform: 'uppercase' as const,
       letterSpacing: '0.4px'
     },
-    skillsList: { display: 'flex', flexDirection: 'column' as const, gap: '5px' },
+    skillsList: { display: 'flex', flexDirection: 'column' as const, gap: '4px' },
     skillItem: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' },
     skillName: { fontSize: '10.5px', color: '#333', fontWeight: '500', minWidth: '80px' },
     stars: { display: 'flex', gap: '2px', fontSize: '11px' },

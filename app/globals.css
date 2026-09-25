@@ -129,3 +129,51 @@
     @apply font-sans;
   }
 }
+
+/* ============================================
+   STYLES D'IMPRESSION
+   ============================================ */
+
+@media print {
+  /* Cache tout ce qui n'est pas le CV */
+  header,
+  footer,
+  nav,
+  .no-print,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Cache les éléments de la barre d'actions */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset des marges et du padding */
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    width: 210mm;
+    height: 297mm;
+  }
+
+  /* Enlève la barre d'espace du header fixe */
+  main {
+    padding-top: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force la couleur d'arrière-plan à s'imprimer */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Format A4 sans marge */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
