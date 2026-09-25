@@ -137,12 +137,12 @@ Le blog utilise **MDX** (Markdown + composants React). Chaque article est un fic
 
 | Titre | Sujet | Date |
 |:---|:---|:---|
-| Lab réseau isolé (VirtualBox + Nmap + Wireshark) | Lab pratique | 2025-09-20 |
-| Nmap : guide complet des options | Reconnaissance | 2025-09-21 |
-| Analyser un scan Nmap avec Wireshark | Analyse paquet | 2025-09-22 |
-| OWASP Top 10 expliqué simplement | Sécurité applicative | 2025-09-23 |
-| Le voyage d'un paquet | Réseau / DNS / NAT | 2025-09-24 |
-| Le modèle OSI : dépannage réseau | Méthodologie | 2025-09-26 |
+| Lab réseau isolé (VirtualBox + Nmap + Wireshark) | Lab pratique | 2026-09-20 |
+| Nmap : guide complet des options | Reconnaissance | 2026-09-21 |
+| Analyser un scan Nmap avec Wireshark | Analyse paquet | 2026-09-22 |
+| OWASP Top 10 expliqué simplement | Sécurité applicative | 2026-09-23 |
+| Le voyage d'un paquet | Réseau / DNS / NAT | 2026-09-24 |
+| Le modèle OSI : dépannage réseau | Méthodologie | 2026-09-26 |
 
 ### Créer un nouvel article
 
@@ -152,7 +152,7 @@ Crée un fichier `content/blog/mon-article.mdx` avec ce frontmatter :
 ---
 title: "Titre de l'article"
 description: "Résumé en une phrase pour le SEO et les partages."
-date: "2025-09-27"
+date: "2026-09-27"
 tags: ["Réseau", "Sécurité", "Python"]
 published: true
 ---
