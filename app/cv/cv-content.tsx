@@ -6,7 +6,7 @@ export function CVContent() {
   const experiences = [
     {
       title: "DÉVELOPPEUR WEB — Sécurité applicative",
-      company: "PitchTrack — decembre 2025 à mars 2026 — Freelance",
+      company: "PitchTrack — décembre 2025 à mars 2026 — Freelance",
       tasks: [
         "Authentification sécurisée : Implémentation Google OAuth 2.0, gestion des sessions et contrôle des accès utilisateurs",
         "Protection des données : Sécurisation des échanges API Webflow/Wized/Xano, gestion des tokens et des droits",
@@ -268,7 +268,7 @@ export function CVContent() {
           <p style={styles.intro}>
             Développeur fullstack (React, Node.js, PostgreSQL) en reconversion vers la cybersécurité.
             Sensibilisé à la sécurité applicative : OAuth 2.0, protection XSS/injections SQL, gestion des accès et des rôles.
-            Développe actuellement des outils Python d&apos;analyse réseau (Scapy, Wireshark) pour approfondir les fondamentaux SOC.
+            Développe des outils Python d&apos;analyse réseau (Scapy, Wireshark) : mini-IDS détectant scans de ports, brute-force et ARP Spoofing, testés dans un lab Kali + Ubuntu isolé.
             Je cherche à appliquer mes compétences techniques au sein d&apos;une équipe SOC N1 ou DevSecOps.
           </p>
         </div>
