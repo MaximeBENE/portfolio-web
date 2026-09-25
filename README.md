@@ -170,6 +170,7 @@ Ton article ici...
 |:---|:---|:---|
 | **Network Packet Analyzer** | Mini-IDS Python (scan de ports, brute-force, ARP spoofing) | [/projects/network-analyzer](/projects/network-analyzer) |
 | **Lab Réseau Virtualisé** | Lab Kali + Ubuntu pour l'analyse réseau | [/projects/lab-reseau](/projects/lab-reseau) |
+| **Détecteur ARP Spoofing** | Mini-IDS Python contre les attaques Man-in-the-Middle | [/projects/arp-spoofing-detector](/projects/arp-spoofing-detector) |
 
 ---
 
@@ -185,7 +186,7 @@ Ton article ici...
 - [x] Animations au scroll (Framer Motion)
 - [x] SEO (sitemap, robots.txt, Open Graph image)
 - [x] Déploiement Vercel + domaine `maximebene.com`
-- [ ] Page projet `arp-spoofing-detector`
+- [x] Page projet `arp-spoofing-detector`
 - [ ] Formulaire de contact
 - [ ] Images Open Graph dynamiques (par article)
 - [ ] Version anglaise (i18n)
