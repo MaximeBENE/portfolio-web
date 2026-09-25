@@ -143,6 +143,13 @@ export default function ARPSpoofingPage() {
               <GithubIcon className="mr-2 h-4 w-4" />
               Voir le code
             </a>
+            <Link
+              href="/blog/detecter-arp-spoofing-python"
+              className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+            >
+              Lire l&apos;article complet
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
@@ -358,6 +365,42 @@ export default function ARPSpoofingPage() {
                 réseau sans autorisation est <strong className="text-foreground">illégal</strong>.
               </p>
             </div>
+          </div>
+        </div>
+
+        <Separator className="my-16" />
+
+        <div>
+          <h2 className="text-2xl font-bold">Articles liés</h2>
+          <div className="mt-6 space-y-3">
+            <Link
+              href="/blog/detecter-arp-spoofing-python"
+              className="group flex items-center justify-between rounded-lg border border-border/60 bg-card p-4 transition-colors hover:border-primary/40"
+            >
+              <div>
+                <h3 className="font-semibold group-hover:text-primary">
+                  Détecter un ARP Spoofing avec Python
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Article complet : code, tests en lab, 3 scénarios
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </Link>
+            <Link
+              href="/projects/network-analyzer"
+              className="group flex items-center justify-between rounded-lg border border-border/60 bg-card p-4 transition-colors hover:border-primary/40"
+            >
+              <div>
+                <h3 className="font-semibold group-hover:text-primary">
+                  Network Packet Analyzer
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Le mini-IDS qui contient ce module ARP
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </Link>
           </div>
         </div>
 
