@@ -267,6 +267,24 @@ export default function ARPSpoofingPage() {
             </div>
           </div>
 
+          {/* Screenshot 3 */}
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold">3. Auto-détection sur la même machine</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Le détecteur et l&apos;attaque tournent sur <strong className="text-foreground">le même poste</strong>.
+              Grâce au broadcast ARP, Kali reçoit ses propres paquets et détecte l&apos;anomalie.
+            </p>
+            <div className="mt-4 overflow-hidden rounded-lg border border-border/60">
+              <Image
+                src="/images/projects/arp-spoofing/auto-detection.png"
+                alt="Auto-détection ARP Spoofing sur la même machine"
+                width={1200}
+                height={800}
+                className="w-full"
+              />
+            </div>
+          </div>
+
           {/* Résultat */}
           <div className="mt-8 rounded-lg border border-red-500/30 bg-red-500/5 p-6">
             <h3 className="font-semibold text-red-500">Résultat : alerte CRITIQUE</h3>

@@ -47,11 +47,11 @@ const projects: Project[] = [
   {
     title: "Détecteur ARP Spoofing",
     description:
-      "Détection en temps réel des attaques Man-in-the-Middle : surveille les réponses ARP, alerte sur les changements de MAC et identifie la cible visée.",
-    tags: ["Python", "Scapy", "ARP", "Sécurité"],
+      "Mini-IDS Python qui détecte les attaques Man-in-the-Middle sur réseau local. Pré-chargement de la table ARP, sévérité contextuelle, export JSON.",
+    tags: ["Python", "Scapy", "ARP", "MITM"],
     icon: <Lock className="h-5 w-5" />,
-    iconBg: "bg-orange-500/10",
-    iconColor: "text-orange-500",
+    iconBg: "bg-green-500/10",
+    iconColor: "text-green-500",
     github: "https://github.com/MaximeBENE/network-analyzer",
     detail: "/projects/arp-spoofing-detector",
     status: "live",
