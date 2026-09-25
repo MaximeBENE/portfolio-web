@@ -42,7 +42,7 @@ export function CVContent() {
   const projets = [
     {
       title: "NETWORK PACKET ANALYZER",
-      context: "Projet portfolio — 2025 — Open source (GitHub)",
+      context: "Projet portfolio — 2026 — Open source (GitHub)",
       tasks: [
         "Développement d'un mini-IDS en Python (Scapy) : capture et analyse de trafic réseau .pcap/.pcapng",
         "Détection automatique de scans de ports (Nmap) et de tentatives de brute-force (SSH, RDP, MySQL)",
@@ -54,7 +54,7 @@ export function CVContent() {
     },
     {
       title: "DÉTECTEUR ARP SPOOFING",
-      context: "Extension du Network Analyzer — 2025 — Open source (GitHub)",
+      context: "Extension du Network Analyzer — 2026 — Open source (GitHub)",
       tasks: [
         "Détection en temps réel des attaques Man-in-the-Middle via surveillance des réponses ARP",
         "Alerte sur changement de MAC suspect, identification de la cible visée",
@@ -257,7 +257,7 @@ export function CVContent() {
             <span>bene.max31@gmail.com</span>
             <span>06.66.39.37.48</span>
             <span>75017 Paris, France</span>
-            <span>29 ans — Permis de conduire</span>
+            <span>30 ans — Permis de conduire</span>
           </div>
           <p style={styles.personalInfo}>
             <a href="https://www.maximebene.com/" target="_blank" rel="noopener noreferrer"

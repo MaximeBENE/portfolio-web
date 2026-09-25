@@ -153,14 +153,16 @@ Si l'attaquant usurpe une machine standard, c'est **élevé** mais moins grave.
 sudo python main.py --arp --interface eth1
 ```
 
-```
+```text
 🎯 Surveillance ARP sur l'interface eth1...
 ⏱️  Durée : 30s (Ctrl+C pour arrêter)
 ```
 
 ### Étape 2 : Lancer l'attaque depuis Ubuntu
 
-![Terminal Ubuntu avec arpspoof en action](/images/blog/arp-spoofing/attaque-arpspoof.png)
+Dans le terminal **Ubuntu**, je lance l'attaque :
+
+![Attaque ARP Spoofing depuis Ubuntu](/images/blog/arp-spoofing/attaque-arpspoof.png)
 
 ```bash
 sudo sysctl -w net.ipv4.ip_forward=1
@@ -172,43 +174,63 @@ sudo arpspoof -i ens33 -t 192.168.244.131 192.168.244.2
 - `-t 192.168.244.131` → **cible** = Kali
 - `192.168.244.2` → **IP usurpée** = la passerelle
 
-### Étape 3 : Observer l'alerte
+### Étape 3 : Observer l'alerte sur Kali
+
+Dans le terminal **Kali**, quelques secondes après le lancement de l'attaque :
 
 ![Détection ARP Spoofing sur Kali](/images/blog/arp-spoofing/detection-alerte.png)
 
-Sur Kali, quelques secondes après le lancement :
-
-```
-🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC (00:0c:29:5a:f2:c6 → 00:50:56:ed:cd:e9)
+```text
+🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC
+   (00:50:56:ed:cd:e9 → 00:0c:29:0a:94:2a)
    La cible 192.168.244.131 est visée. Possible Man-in-the-Middle.
 ```
 
 **Décodage :**
 - **IP usurpée** : `192.168.244.2` (la passerelle)
-- **Ancienne MAC** : `00:0c:29:5a:f2:c6` (vraie passerelle)
-- **Nouvelle MAC** : `00:50:56:ed:cd:e9` (Ubuntu, l'attaquant)
-- **Cible visée** : `192.168.244.131` (Kali)
+- **Ancienne MAC** : `00:50:56:ed:cd:e9` (vraie passerelle VirtualBox)
+- **Nouvelle MAC** : `00:0c:29:0a:94:2a` (Kali, qui usurpe)
+- **Cible visée** : `192.168.244.131` (Kali, qui est ciblé)
 - **Sévérité** : CRITIQUE (car c'est la passerelle)
 
-### Le rapport final
+### Étape 4 : Détecter un ARP Spoofing sur sa propre machine
 
-```
+Le scénario précédent nécessite **deux VMs**. Mais dans la vraie vie, un poste de travail peut aussi détecter qu'il est **lui-même ciblé** — sans infrastructure dédiée.
+
+**Voici la preuve :** sur **la même machine Kali**, je lance en parallèle le détecteur ET l'attaque.
+
+![Auto-détection d'ARP Spoofing sur la même machine](/images/blog/arp-spoofing/auto-detection.png)
+
+À gauche, le détecteur qui tourne. À droite, `arpspoof` qui envoie de fausses réponses ARP sur le réseau. Quelques secondes plus tard, l'alerte tombe **sur la machine qui subit l'attaque** :
+
+```text
+🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC
+   (00:50:56:ed:cd:e9 → 00:0c:29:0a:94:2a)
+   La cible 192.168.244.131 est visée. Possible Man-in-the-Middle.
+
 ============================================================
 📊 RAPPORT ARP SPOOFING
 ============================================================
 
-📦 Paquets ARP analysés : 20
-   Requêtes : 11
-   Réponses : 9
+📦 Paquets ARP analysés : 19
+   Requêtes : 2
+   Réponses : 17
 
 📋 Taille table ARP : 2 entrées
 
-⚠️  2 changements suspects détectés
-  • 🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC
+⚠️  1 changements suspects détectés
   • 🚨 CRITIQUE - ARP SPOOFING potentiel : l'IP 192.168.244.2 a changé de MAC
 
+============================================================
 ✅ Exporté vers arp_report.json
 ```
+
+**Décodage :**
+- `arpspoof` envoie des réponses ARP en **broadcast** sur le réseau
+- Kali les reçoit (même s'il n'est pas la cible directe)
+- Le détecteur voit le changement de MAC et **alerte immédiatement**
+
+**Ce que ça démontre :** un simple poste de travail peut détecter une attaque MITM en cours **sans infrastructure centralisée** (pas besoin d'un IDS/IPS réseau dédié). C'est exactement le principe d'un **HIDS** (Host-based IDS).
 
 ## Ce que ça démontre en SOC
 
