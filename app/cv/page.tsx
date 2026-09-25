@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
 import { CVContent } from "@/app/cv/cv-content";
 
 export const metadata: Metadata = {
-  title: "CV",
+  title: {
+    absolute: "CV - Maxime BENE",
+  },
   description:
     "CV de Maxime BENE, développeur fullstack en reconversion vers la cybersécurité (SOC N1 / DevSecOps).",
 };
